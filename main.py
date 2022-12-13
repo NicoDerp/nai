@@ -1,7 +1,9 @@
+#!/usr/bin/python3
 
-from nai import FFNeuralNetwork
+from nai import MLPNeuralNetwork
 
 
-net = FFNeuralNetwork(2, 3, 2)
+net = MLPNeuralNetwork([2, 3, 2])
 
+net.print()
 
