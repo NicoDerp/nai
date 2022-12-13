@@ -47,6 +47,9 @@ class ReLU(ActivationFunction):
 class MLPNeuralNetwork:
     def __init__(self, layerSizes, activation=Sigmoid):
 
+        self.momentum = 1.0
+        self.learning_rate = 1.0
+
         if len(layerSizes) < 3:
             raise ValueError("A multilayer perceptron must consist of an input layer, atleast one hidden layer and an ouuput layer.")
 
@@ -93,9 +96,18 @@ class MLPNeuralNetwork:
         # Loop through each layer backwards
         for i in range(self.nLayers - 1, 0, -1):
             layer = self.layers[i]
+            leftLayerSize = len(self.layers[-1])
+            old_dw = 0 # TODO
+            # Loop through each neuron in the right layer (output)
             for j, n in enumerate(layer):
-                loss = expectedOutput[j] - n
+                loss = self.expectedOutput[j] - n
                 err = loss * self.activation.df(n)
+                dw = self.learning_rate * err * n + old_dw * self.momentum
+
+                # Loop through the weights that are connected to this neuron
+                for k in range(j*leftLayerSize, (j+1)*leftLayerSize):
+                    print(k)
+                print()
 
     def __str__(self):
         string = ""
