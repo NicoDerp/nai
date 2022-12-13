@@ -1,6 +1,6 @@
 
 import random
-
+import math
 
 def nTimes(n, func):
     l = []
@@ -30,10 +30,10 @@ class Sigmoid(ActivationFunction):
     name = "Sigmoid"
 
     def f(x):
-        return 1 / (1 + e**(-x))
+        return 1 / (1 + math.e**(-x))
 
     def df(x):
-        return (e**x) / ((e**2 + 1) ** 2)
+        return (math.e**x) / ((math.e**2 + 1) ** 2)
 
 class ReLU(ActivationFunction):
     name = "ReLU"
@@ -59,7 +59,9 @@ class MLPNeuralNetwork:
             self.weights.append(one(len(self.layers[i]) * len(self.layers[i + 1])))
         #    self.weights.append(nRandom(len(self.layers[i]) * len(self.layers[i + 1])))
 
-        self.biases = zero(0)
+        self.biases = []
+        for i in range(self.nLayers - 1):
+            self.biases.append(zero(len(self.layers[i+1])))
 
         self.activation = activation
         
@@ -71,7 +73,7 @@ class MLPNeuralNetwork:
             layer1 = self.layers[i]
             layer2 = self.layers[i + 1]
             weights = self.weights[i]
-            bias = self.biases[i]
+            biases = self.biases[i]
 
             # Loop through the neurons on the second layer (the one we're calculating)
             for j in range(len(layer2)):
@@ -81,7 +83,7 @@ class MLPNeuralNetwork:
                 for n1, w in zip(layer1, weights[j*len(layer1):]):
                     s += w * n1
 
-                s += bias
+                s += biases[j]
                 s = self.activation.f(s)
                 layer2[j] = s
 
