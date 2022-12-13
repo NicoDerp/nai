@@ -50,6 +50,8 @@ class MLPNeuralNetwork:
         if len(layerSizes) < 3:
             raise ValueError("A multilayer perceptron must consist of an input layer, atleast one hidden layer and an ouuput layer.")
 
+        self.expectedOutput = one(layerSizes[-1])
+
         self.nLayers = len(layerSizes)
         self.layerSizes = layerSizes
         self.layers = [zero(layerSizes[i]) for i in range(self.nLayers)]
@@ -64,7 +66,7 @@ class MLPNeuralNetwork:
             self.biases.append(zero(len(self.layers[i+1])))
 
         self.activation = activation
-        
+
         print("Using activation function:", activation.name)
 
     def forwardPropagation(self):
@@ -87,12 +89,19 @@ class MLPNeuralNetwork:
                 s = self.activation.f(s)
                 layer2[j] = s
 
-    def gradientDescent(self):
-        pass
+    def backPropagation(self):
+        # Loop through each layer backwards
+        for i in range(self.nLayers - 1, 0, -1):
+            layer = self.layers[i]
+            for j, n in enumerate(layer):
+                loss = expectedOutput[j] - n
+                err = loss * self.activation.df(n)
 
-    def print(self):
+    def __str__(self):
+        string = ""
         for i in range(max(self.layerSizes)):
-            s = "\t".join(["" if i >= len(x) else str(x[i]) for x in self.layers])
-            print(s)
+            string += "\t".join(["" if i >= len(x) else str(x[i]) for x in self.layers])
+            string += "\n"
+        return string
 
 
