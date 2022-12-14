@@ -15,7 +15,10 @@ def one(n):
     return [1] * n
 
 def nRandom(n):
-    return nTimes(n, random.random)
+    l = []
+    for i in range(n):
+        l.append(random.random() * 2 - 1)
+    return l
 
 class ActivationFunction:
     name = "Base ActivationFunction"
@@ -48,7 +51,7 @@ class MLPNeuralNetwork:
     def __init__(self, layerSizes, activation=Sigmoid):
 
         self.momentum = 1.0
-        self.learning_rate = 1.0
+        self.learning_rate = 0.2
 
         if len(layerSizes) < 3:
             raise ValueError("A multilayer perceptron must consist of an input layer, atleast one hidden layer and an ouuput layer.")
@@ -63,10 +66,11 @@ class MLPNeuralNetwork:
         self.dws = []
         self.biases = []
         for i in range(self.nLayers - 1):
-            self.weights.append(one(len(self.layers[i]) * len(self.layers[i + 1])))
-        #    self.weights.append(nRandom(len(self.layers[i]) * len(self.layers[i + 1])))
+            #self.weights.append(one(len(self.layers[i]) * len(self.layers[i + 1])))
+            self.weights.append(nRandom(len(self.layers[i]) * len(self.layers[i + 1])))
             self.dws.append(zero(len(self.layers[i]) * len(self.layers[i + 1])))
-            self.biases.append(zero(len(self.layers[i+1])))
+            #self.biases.append(zero(len(self.layers[i+1])))
+            self.biases.append(nRandom(len(self.layers[i + 1])))
 
         self.activation = activation
 
@@ -131,6 +135,8 @@ class MLPNeuralNetwork:
 
                     # Update the weight!
                     weights[kw] += dw
+
+                    db = self.bias_learning_rate
 
                     # Update last delta weight
                     dws[kw] = dw
