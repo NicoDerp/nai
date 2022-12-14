@@ -98,16 +98,18 @@ class MLPNeuralNetwork:
             layer = self.layers[i]
             leftLayerSize = len(self.layers[-1])
             old_dw = 0 # TODO
-            # Loop through each neuron in the right layer (output)
+            # Loop through each neuron in the current layer
             for j, n in enumerate(layer):
-                loss = self.expectedOutput[j] - n
-                err = loss * self.activation.df(n)
-                dw = self.learning_rate * err * n + old_dw * self.momentum
-
-                # Loop through the weights that are connected to this neuron
-                for k in range(j*leftLayerSize, (j+1)*leftLayerSize):
-                    print(k)
-                print()
+                # Check if it is the output layer
+                if i == self.nLayers - 1:
+                    loss = self.expectedOutput[j] - n
+                    err = loss * self.activation.df(n)
+                    dw = self.learning_rate * err * n + old_dw * self.momentum
+                    old_dw = dw
+                else:
+                    loss = self.expectedOutput[j+1] - n
+                    err = loss * self.expectedOutput[j+1]
+                    dw = self.learning_rate * err * n + old_dw * self.momentum
 
     def __str__(self):
         string = ""
