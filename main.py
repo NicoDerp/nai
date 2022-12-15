@@ -4,7 +4,7 @@
 from nai import *
 
 
-net = MLPNeuralNetwork([2, 3, 2], activation=ReLU)
+net = MLPNeuralNetwork([2, 3, 2], activation=Sigmoid)
 net.layers[0] = [1, 2]
 
 net.forwardPropagation()
@@ -14,6 +14,8 @@ for epoch in range(10):
     print(f"Epoch {epoch+1}/10")
 
     print("Trying to get:", net.expectedOutput)
+
+    print(net.weights)
 
     net.forwardPropagation()
     net.backPropagation()
