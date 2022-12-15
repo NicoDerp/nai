@@ -65,12 +65,14 @@ class MLPNeuralNetwork:
         self.weights = []
         self.dws = []
         self.biases = []
+        self.lastErrors = []
         for i in range(self.nLayers - 1):
             #self.weights.append(one(len(self.layers[i]) * len(self.layers[i + 1])))
             self.weights.append(nRandom(len(self.layers[i]) * len(self.layers[i + 1])))
             self.dws.append(zero(len(self.layers[i]) * len(self.layers[i + 1])))
             #self.biases.append(zero(len(self.layers[i+1])))
             self.biases.append(nRandom(len(self.layers[i + 1])))
+            self.lastErrors.append(zero(len(self.layers[i + 1])))
 
         self.activation = activation
 
@@ -131,12 +133,12 @@ class MLPNeuralNetwork:
                     werrSum += w * e
 
                     # Finally, calculate dw
-                    dw = self.learning_rate * e * self.layers[i + 1][j] + dws[kw] * self.momentum
+                    dw = self.learning_rate * e * self.layers[i + 1][j] #+ dws[kw] * self.momentum
 
                     # Update the weight!
                     weights[kw] += dw
 
-                    db = self.bias_learning_rate
+                    #db = self.bias_learning_rate
 
                     # Update last delta weight
                     dws[kw] = dw
@@ -147,11 +149,17 @@ class MLPNeuralNetwork:
 
             last_errs = new_last_errs
 
+    def globalError(self):
+        E = 0
+        for i, n in enumerate(self.layers[-1]):
+            E += (self.expectedOutput[i] - n) ** 2
+
+        return E / 2
 
     def __str__(self):
         string = ""
         for i in range(max(self.layerSizes)):
-            string += "\t".join(["" if i >= len(x) else str(x[i]) for x in self.layers])
+            string += "\t".join(["" if i >= len(x) else str(round(x[i], 2)) for x in self.layers])
             string += "\n"
         return string
 
