@@ -48,6 +48,15 @@ class ReLU(ActivationFunction):
     def df(x):
         return 0 if x <= 0 else 1
 
+class TanH(ActivationFunction):
+    name = "TanH"
+
+    def f(x):
+        return math.tanh(x)
+
+    def df(x):
+        return 1 - math.tanh(x) ** 2
+
 class MLPNeuralNetwork:
     def __init__(self, layerSizes, activation=Sigmoid):
 
@@ -65,13 +74,11 @@ class MLPNeuralNetwork:
         self.zLayers = [zero(layerSizes[i]) for i in range(1, self.nLayers)] # The same as layers but every neuron is before activation
 
         self.weights = []
-        self.dws = []
         self.biases = []
         self.lastErrors = []
         for i in range(self.nLayers - 1):
             #self.weights.append(one(len(self.layers[i]) * len(self.layers[i + 1])))
             self.weights.append(nRandom(len(self.layers[i]) * len(self.layers[i + 1])))
-            self.dws.append(zero(len(self.layers[i]) * len(self.layers[i + 1])))
             #self.biases.append(zero(len(self.layers[i+1])))
             self.biases.append(nRandom(len(self.layers[i + 1])))
             self.lastErrors.append(zero(len(self.layers[i + 1])))
@@ -96,36 +103,23 @@ class MLPNeuralNetwork:
                 for k, n in enumerate(layer1):
                     kw = k * len(layer2) + j
                     w = weights[kw]
-                    #print(n, w)
                     s += w * n
 
-                #print(f"z = {s} + {biases[j]} = {s+biases[j]}")
                 s += biases[j]
                 self.zLayers[i][j] = s
                 s = self.activation.f(s)
-                #print(f"a = {s}\n")
                 layer2[j] = s
 
     def backPropagation(self):
-        #last_errs = []
-
         # Loop through each neuron in the output layer and calculate errors
         for k, n in enumerate(self.layers[-1]):
-            #dk = self.expectedOutput[k] - n
             dk = n - self.expectedOutput[k]
-            #err = dk * self.activation.df(n)
             err = dk * self.activation.df(self.zLayers[-1][k])
-            #last_errs.append(err)
             self.lastErrors[-1][k] = err
-            #print(dw)
 
         # Loop through each layer except output layer backwards
         for i in range(self.nLayers - 1, 0, -1):
-            print(f"Layer {i}")
             layer = self.layers[i]
-            #dws = self.dws[i]
-
-            #print("Using last_errs", last_errs)
 
             # Loop through the neurons in the layer to the left
             for j in range(len(self.layers[i - 1])):
@@ -136,7 +130,6 @@ class MLPNeuralNetwork:
 
                     # Get the weight between input (j) and output (k) (w k,j)
                     w = self.weights[i - 1][kw]
-                    #e = last_errs[j]
                     e = self.lastErrors[i - 1][k] # Get the error from neuron in this layer
                     werrSum += w * e
 
@@ -150,15 +143,10 @@ class MLPNeuralNetwork:
                     # Update the bias for the neuron on this layer
                     self.biases[i - 1][k] += db
 
-                    # Update last delta weight
-                    #dws[kw] = dw
-
                 # Calculated error for neuron on the layer to the left
                 if i > 1:
                     err = werrSum * self.activation.df(self.zLayers[i - 2][j])
                     self.lastErrors[i - 2][j] = err
-
-            #self.lastErrs = new_last_errs
 
     def globalError(self):
         E = 0
@@ -168,9 +156,12 @@ class MLPNeuralNetwork:
         return E / 2
 
     def __str__(self):
-        string = ""
+        string = "Input          "
+        string += "".join(f"Hidden {i}{' '*(8-len(str(i)))}" for i in range(self.nLayers-2))
+        string += "Output\n"
+
         for i in range(max(self.layerSizes)):
-            string += "\t".join(["" if i >= len(x) else str(round(x[i], 2)) for x in self.layers])
+            string += "        ".join(["       " if i >= len(x) else f"{x[i]:.5f}" for x in self.layers])
             string += "\n"
         return string
 
