@@ -52,7 +52,7 @@ class MLPNeuralNetwork:
     def __init__(self, layerSizes, activation=Sigmoid):
 
         self.momentum = 1.0
-        self.learning_rate = 0.2
+        self.learning_rate = 0.5
 
         if len(layerSizes) < 3:
             raise ValueError("A multilayer perceptron must consist of an input layer, atleast one hidden layer and an ouuput layer.")
@@ -62,7 +62,7 @@ class MLPNeuralNetwork:
         self.nLayers = len(layerSizes)
         self.layerSizes = layerSizes
         self.layers = [zero(layerSizes[i]) for i in range(self.nLayers)]
-        self.zLayers = [zero(layerSizes[i] for i in range(self.nLayers))] # The same as layers but every neuron is before activation
+        self.zLayers = [zero(layerSizes[i]) for i in range(1, self.nLayers)] # The same as layers but every neuron is before activation
 
         self.weights = []
         self.dws = []
@@ -81,24 +81,29 @@ class MLPNeuralNetwork:
         print("Using activation function:", activation.name)
 
     def forwardPropagation(self):
-        # Loop through each layer
+        # Loop through input and hidden layers
         for i in range(self.nLayers - 1):
             layer1 = self.layers[i]
             layer2 = self.layers[i + 1]
             weights = self.weights[i]
             biases = self.biases[i]
 
-            # Loop through the neurons on the second layer (the one we're calculating)
+            # Loop through the neurons on the second layer
             for j in range(len(layer2)):
                 s = 0
 
-                # Loop through weights and neurons from the first layer
-                for n1, w in zip(layer1, weights[j*len(layer1):]):
-                    s += w * n1
+                # Loop through neurons on the first layer
+                for k, n in enumerate(layer1):
+                    kw = k * len(layer2) + j
+                    w = weights[kw]
+                    #print(n, w)
+                    s += w * n
 
+                #print(f"z = {s} + {biases[j]} = {s+biases[j]}")
                 s += biases[j]
                 self.zLayers[i][j] = s
                 s = self.activation.f(s)
+                #print(f"a = {s}\n")
                 layer2[j] = s
 
     def backPropagation(self):
@@ -115,44 +120,43 @@ class MLPNeuralNetwork:
             #print(dw)
 
         # Loop through each layer except output layer backwards
-        for i in range(self.nLayers - 2, -1, -1):
+        for i in range(self.nLayers - 1, 0, -1):
             print(f"Layer {i}")
             layer = self.layers[i]
-            weights = self.weights[i]
-            dws = self.dws[i]
-
-            #new_last_errs = []
+            #dws = self.dws[i]
 
             #print("Using last_errs", last_errs)
 
-            # Loop through the neurons in this layer
-            for k, n in enumerate(layer):
+            # Loop through the neurons in the layer to the left
+            for j in range(len(self.layers[i - 1])):
                 werrSum = 0
-                # Loop through the neurons in the layer to the right
-                for j in range(len(self.layers[i + 1])):
-                    kw = k * len(self.layers[i + 1]) + j
-                    # Get the weight between k and j (w k,j)
-                    w = weights[kw]
+                # Loop through the neurons in this layer
+                for k in range(len(layer)):
+                    kw = j * len(self.layers[i]) + k # left*sizeof(right) + right
+
+                    # Get the weight between input (j) and output (k) (w k,j)
+                    w = self.weights[i - 1][kw]
                     #e = last_errs[j]
-                    e = self.lastErrors[i + 1 - 1][j] # Get the error from neuron in the next layer
+                    e = self.lastErrors[i - 1][k] # Get the error from neuron in this layer
                     werrSum += w * e
 
                     # Finally, calculate dw
-                    dw = self.learning_rate * e * self.layers[i + 1][j] + dws[kw] * self.momentum
+                    dw = -self.learning_rate * self.layers[i - 1][j] * e
+                    db = -self.learning_rate * e
 
-                    # Update the weight!
-                    weights[kw] += dw
+                    # Update the weight between this layer and the one to the left
+                    self.weights[i - 1][kw] += dw
 
-                    #db = self.bias_learning_rate
+                    # Update the bias for the neuron on this layer
+                    self.biases[i - 1][k] += db
 
                     # Update last delta weight
-                    dws[kw] = dw
+                    #dws[kw] = dw
 
-                # Calculated error for this neuron's weights
-                #err = werrSum * self.activation.df(n)
-                #err = werrSum * n * (self.expectedOutput[j] - n) # TODO will not work for more than 1 hidden layer
-                err = werrSum # TODO will not work for more than 1 hidden layer
-                self.lastErrors[i - 1][k] = err
+                # Calculated error for neuron on the layer to the left
+                if i > 1:
+                    err = werrSum * self.activation.df(self.zLayers[i - 2][j])
+                    self.lastErrors[i - 2][j] = err
 
             #self.lastErrs = new_last_errs
 
