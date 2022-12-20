@@ -1,9 +1,10 @@
 #!/usr/bin/python3
 
-from nai.activations import *
-from nai.neuralnet import *
+from nai import *
 
-net = MLPNeuralNetwork([2, 3, 2], activation=ReLU)
+dataset = datasets.MNIST("./datasets/", datasetType=datasets.DatasetTypes.Train, download=True)
+
+net = neuralnet.MLPNeuralNetwork([2, 3, 2], activation=activations.ReLU)
 net.layers[0] = [0.1, 0.3]
 net.expectedOutput = [0.8, 0.5]
 net.learning_rate = 0.05
