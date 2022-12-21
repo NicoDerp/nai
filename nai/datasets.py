@@ -8,7 +8,6 @@ from urllib.request import urlopen
 from zipfile import ZipFile
 
 from tqdm import tqdm
-import progressbar
 
 import requests
 
@@ -30,54 +29,62 @@ class MyProgressBar():
         else:
             self.pbar.finish()
 
-class DownloadProgressBar(tqdm):
-    def update_to(self, b=1, bsize=1, tsize=None):
-        if tsize is not None:
-            self.total = tsize
-        self.update(b * bsize - self.n)
-
-
-class DatasetTypes:
-    class Train:
-        pass
-
-    class Test:
-        pass
-
-
-class MNIST:
-    def __init__(self, path, datasetType=DatasetTypes.Train, download=False):
+class Dataset:
+    def __init__(self, path, download=False, force=False):
         self.path = path
 
+        # Don't want to download and not downloaded
         if not download and not self.isDownloaded():
             raise ValueError(f"MNIST is not downloaded in '{path}' and download is set False.")
 
-        # alternative MNIST data set URL
+        # Download and don't care if it is already installed
+        if force:
+            self._download()
+
+        # Want to download and not downloaded
+        elif download and not self.isDownloaded():
+            self._download()
+
+    def _download(self):
+        pass
+
+    def isDownloaded(self):
+        pass
+
+class MNIST(Dataset):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    def _download(self):
+        # Alternative MNIST data set URL
         MNIST_ZIP_URL = 'https://data.deepai.org/mnist.zip'
 
-        # directories for saving the data => adapt to your needs
+        # Directories for saving the data => adapt to your needs
         DATA_DIR = os.path.join(os.getcwd(), self.path)
         MNIST_DIR = os.path.join(DATA_DIR, "MNIST")
         MNIST_ZIP = os.path.join(DATA_DIR, "mnist.zip")
 
         BLOCK_SIZE = 1024 #1 Kibibyte
 
-
-        # download and unzip the data set files into the "path/MNIST/raw" directory
+        # Download and unzip the data set files into the "path/MNIST/raw" directory
         raw_mnist = os.path.join(MNIST_DIR, "raw")
-        #with urlopen(MNIST_ZIP_URL) as zip_response:
-        #urlretrieve(MNIST_ZIP_URL, MNIST_ZIP, MyProgressBar())
 
-        #with open(MNIST_ZIP) as f:
-        #with DownloadProgessBar(unit="B", unit_scale=True, miniters=1, descs="mnist.zip") as t:
-        #    urlretrieve(MNIST_ZIP_URL, filename=)
         resp = requests.get(MNIST_ZIP_URL, stream=True)
-
         total_size = int(resp.headers.get('content-length', 0))
-        progress_bar = tqdm(total=total_size, unit='iB', unit_scale=True)
+
+        progress_bar = tqdm(total=total_size, ascii="░▒█", unit='iB', unit_scale=True)
+
+        dots = 0
+        counter = 0
 
         with open(MNIST_ZIP, 'r+b') as f:
             for data in resp.iter_content(BLOCK_SIZE):
+                counter += 1
+                if counter >= BLOCK_SIZE:
+                    counter = 0
+                    dots = (dots + 1) % 4
+                    progress_bar.set_description("Downloading" + "." * dots + " " * (3 - dots))
+
                 progress_bar.update(len(data))
                 f.write(data)
 
@@ -99,9 +106,5 @@ class MNIST:
                         shutil.copyfileobj(f_in, f_out)
 
     def isDownloaded(self):
-        if not os.path.isdir(self.path):
-            return False
-
-        return True
-        # return True
+        return os.path.isdir(os.path.join(self.path, "MNIST/raw"))
 

@@ -2,7 +2,9 @@
 
 from nai import *
 
-dataset = datasets.MNIST("datasets/", datasetType=datasets.DatasetTypes.Train, download=True)
+dataset = datasets.MNIST("datasets", download=True, force=True)
+
+exit()
 
 net = neuralnet.MLPNeuralNetwork([2, 3, 2], activation=activations.ReLU)
 net.layers[0] = [0.1, 0.3]
