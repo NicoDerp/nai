@@ -45,6 +45,12 @@ class Dataset:
         elif download and not self.isDownloaded():
             self._download()
 
+    def trainRead(self):
+        pass
+
+    def testRead(self):
+        pass
+
     def _download(self):
         pass
 
