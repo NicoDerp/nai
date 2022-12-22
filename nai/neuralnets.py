@@ -76,7 +76,37 @@ class MLPNeuralNetwork:
                 s = self.activation.f(s)
                 layer2[j] = s
 
-    def backPropagation(self):
+    def _calcDeltas(self):
+        dws = []
+        dbs = []
+        # Loop through each layer except output layer backwards
+        for i in range(self.nLayers - 1, 0, -1):
+            layer = self.layers[i]
+
+            dwl = []
+            dbl = []
+
+            # Loop through the neurons in the layer to the left
+            for j in range(len(self.layers[i - 1])):
+                # Loop through the neurons in this layer
+                for k in range(len(layer)):
+                    # Get the weight between input (j) and output (k) (w k,j)
+                    e = self.lastErrors[i - 1][k] # Get the error from neuron in this layer
+
+                    # Finally, calculate dw and db
+                    dw = -self.learning_rate * self.layers[i - 1][j] * e
+                    db = -self.learning_rate * e
+
+                    dwl.append(dw)
+                    dbl.append(db)
+
+            dws.append(dwl)
+            dbs.append(dbl)
+
+        return dws, dbs
+
+
+    def backPropagate(self):
         # Loop through each neuron in the output layer and calculate errors
         for k, n in enumerate(self.layers[-1]):
             dk = n - self.expectedOutput[k]
@@ -99,7 +129,7 @@ class MLPNeuralNetwork:
                     e = self.lastErrors[i - 1][k] # Get the error from neuron in this layer
                     werrSum += w * e
 
-                    # Finally, calculate dw
+                    # Finally, calculate dw and db
                     dw = -self.learning_rate * self.layers[i - 1][j] * e
                     db = -self.learning_rate * e
 

@@ -14,24 +14,14 @@ import requests
 
 
 
-class MyProgressBar():
-    def __init__(self):
-        self.pbar = None
-
-    def __call__(self, block_num, block_size, total_size):
-        if not self.pbar:
-            self.pbar=progressbar.ProgressBar(maxval=total_size)
-            self.pbar.start()
-
-        downloaded = block_num * block_size
-        if downloaded < total_size:
-            self.pbar.update(downloaded)
-        else:
-            self.pbar.finish()
-
 class Dataset:
+    FILES = []
+
     def __init__(self, path, download=False, force=False):
         self.path = path
+        self.shape = (0, 0)
+
+        self._initVars()
 
         # Don't want to download and not downloaded
         if not download and not self.isDownloaded():
@@ -45,6 +35,9 @@ class Dataset:
         elif download and not self.isDownloaded():
             self._download()
 
+    def _initVars(self):
+        pass
+
     def trainRead(self):
         pass
 
@@ -57,23 +50,37 @@ class Dataset:
     def isDownloaded(self):
         pass
 
+
+class InputData:
+    def __init__(self):
+        pass
+
+    def reshape(self):
+        pass
+
+class InputLabels:
+    def __init__(self):
+        pass
+
+    def reshape(self):
+        pass
+
 class MNIST(Dataset):
+    FILES = ["t10k-images-idx3-ubyte", "t10k-labels-idx1-ubyte", "train-images-idx3-ubyte", "train-labels-idx1-ubyte"]
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
+        self.shape = (28, 28) # Don't hardcode
 
     def _download(self):
         # Alternative MNIST data set URL
         MNIST_ZIP_URL = 'https://data.deepai.org/mnist.zip'
 
-        # Directories for saving the data => adapt to your needs
-        DATA_DIR = os.path.join(os.getcwd(), self.path)
-        MNIST_DIR = os.path.join(DATA_DIR, "MNIST")
-        MNIST_ZIP = os.path.join(DATA_DIR, "mnist.zip")
-
         BLOCK_SIZE = 1024 #1 Kibibyte
 
         # Download and unzip the data set files into the "path/MNIST/raw" directory
-        raw_mnist = os.path.join(MNIST_DIR, "raw")
+        raw_mnist = os.path.join(self.MNIST_DIR, "raw")
 
         resp = requests.get(MNIST_ZIP_URL, stream=True)
         total_size = int(resp.headers.get('content-length', 0))
@@ -94,14 +101,9 @@ class MNIST(Dataset):
                 progress_bar.update(len(data))
                 f.write(data)
 
-        with urlopen("file://" + MNIST_ZIP) as z:
+        with urlopen("file://" + self.MNIST_ZIP) as z:
             with ZipFile(BytesIO(z.read())) as zfile:
                 zfile.extractall(raw_mnist)
-                    #for member in tqdm(zfile.infolist(), desc="Extracting "):
-                    #    try:
-                    #        zfile.extract(member, raw_mnist)
-                    #    except zipfile.error as e:
-                    #        print("Error", e)
 
         for fname in os.listdir(path=raw_mnist):
             if fname.endswith(".gz"):
@@ -111,6 +113,17 @@ class MNIST(Dataset):
                     with open(os.path.join(raw_mnist, fname_unzipped), 'wb') as f_out:
                         shutil.copyfileobj(f_in, f_out)
 
+    def _initVars(self):
+        # Directories for saving the data => adapt to your needs
+        self.DATA_DIR = os.path.join(os.getcwd(), self.path)
+        self.MNIST_DIR = os.path.join(self.DATA_DIR, "MNIST")
+        self.RAW_DIR = os.path.join(self.MNIST_DIR, "raw")
+        self.MNIST_ZIP = os.path.join(self.DATA_DIR, "mnist.zip")
+
+    def trainFiles(self):
+        return os.path.join(self.RAW_DIR, "train-images-idx3-ubyte"), os.path.join(self.RAW_DIR, "train-labels-idx1-ubyte")
+
     def isDownloaded(self):
-        return os.path.isdir(os.path.join(self.path, "MNIST/raw"))
+        #RAW_DIR = os.path.join(os.getcwd(), self.path, "MNIST", "raw")
+        return all([os.path.isfile(os.path.join(self.RAW_DIR, fn))] for fn in MNIST.FILES)
 

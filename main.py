@@ -2,7 +2,13 @@
 
 from nai import *
 
-dataset = datasets.MNIST("datasets", download=True, force=True)
+dataset = datasets.MNIST("datasets", download=True)
+
+model = aiwrappers.MLP([784, 100, 100, 10])
+
+model.train(dataset, epochs=50, batch_size=10)
+
+model.test(dataset)
 
 exit()
 
@@ -24,8 +30,8 @@ while epoch < max_epochs:
 
     print(f"Epoch {epoch+1}/{max_epochs}")
 
-    net.forwardPropagation()
-    net.backPropagation()
+    net.forwardPropagate()
+    net.backPropagate()
     print(f"\n{net}\n")
     print(f"Loss {loss:.20f}")
 
