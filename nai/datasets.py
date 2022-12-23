@@ -11,6 +11,7 @@ from tqdm import tqdm
 
 import requests
 
+from random import randint
 
 
 
@@ -20,6 +21,10 @@ class Dataset:
     def __init__(self, path, download=False, force=False):
         self.path = path
         self.shape = (0, 0)
+
+        self.current = None
+        self.offset = 0
+        self.used = []
 
         self._initVars()
 
@@ -38,10 +43,9 @@ class Dataset:
     def _initVars(self):
         pass
 
-    def trainRead(self):
-        pass
+    def shuffle()
 
-    def testRead(self):
+    def retrieveSample(self):
         pass
 
     def _download(self):
@@ -51,19 +55,14 @@ class Dataset:
         pass
 
 
-class InputData:
-    def __init__(self):
-        pass
+def Sample:
+    def __init__(self, data, output):
+        self.data = data
+        self.output = output
 
-    def reshape(self):
-        pass
-
-class InputLabels:
-    def __init__(self):
-        pass
-
-    def reshape(self):
-        pass
+class SetTypes:
+    Train = 0
+    Test = 1
 
 class MNIST(Dataset):
     FILES = ["t10k-images-idx3-ubyte", "t10k-labels-idx1-ubyte", "train-images-idx3-ubyte", "train-labels-idx1-ubyte"]
@@ -113,6 +112,20 @@ class MNIST(Dataset):
                     with open(os.path.join(raw_mnist, fname_unzipped), 'wb') as f_out:
                         shutil.copyfileobj(f_in, f_out)
 
+    def useSet(self, s):
+        self.current = s
+
+    def shuffle(self):
+        self.used = []
+
+    def retrieveSample(self):
+        # self.current == SetTypes.Train
+        with open(os.path.join(self.RAW_DIR, "train-images-idx3-ubyte")) as dataFile:
+            pass
+
+        with open(os.path.join(self.RAw_dir, "train-labels-idx1-ubyte")) as labelFile:
+            pass
+
     def _initVars(self):
         # Directories for saving the data => adapt to your needs
         self.DATA_DIR = os.path.join(os.getcwd(), self.path)
@@ -124,6 +137,24 @@ class MNIST(Dataset):
         return os.path.join(self.RAW_DIR, "train-images-idx3-ubyte"), os.path.join(self.RAW_DIR, "train-labels-idx1-ubyte")
 
     def isDownloaded(self):
-        #RAW_DIR = os.path.join(os.getcwd(), self.path, "MNIST", "raw")
-        return all([os.path.isfile(os.path.join(self.RAW_DIR, fn))] for fn in MNIST.FILES)
+        if not all([os.path.isfile(os.path.join(self.RAW_DIR, fn))] for fn in MNIST.FILES):
+            return False
+
+        with open("train-images-idx3-ubyte") as f:
+            if f.read(1) != 2051:
+                raise ValueError("Magic number for 'train-images-idx3-ubyte' does not match.")
+
+        with open("train-labels-idx1-ubyte") as f:
+            if f.read(1) != 2049:
+                raise ValueError("Magic number for 'train-labels-idx1-ubyte' does not match.")
+
+        with open("t10k-images-idx3-ubyte") as f:
+            if f.read(1) != 2051:
+                raise ValueError("Magic number for 't10k-images-idx3-ubyte' does not match.")
+
+        with open("t10k-labels-idx1-ubyte") as f:
+            if f.read(1) != 2049:
+                raise ValueError("Magic number for 't10k-labels-idx1-ubyte' does not match.")
+
+        return True
 

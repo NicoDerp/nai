@@ -76,7 +76,7 @@ class MLPNeuralNetwork:
                 s = self.activation.f(s)
                 layer2[j] = s
 
-    def _calcDeltas(self):
+    def calcDeltas(self):
         dws = []
         dbs = []
         # Loop through each layer except output layer backwards

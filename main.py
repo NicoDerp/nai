@@ -8,7 +8,7 @@ model = aiwrappers.MLP([784, 100, 100, 10])
 
 model.train(dataset, epochs=50, batch_size=10)
 
-model.test(dataset)
+#model.test(dataset)
 
 exit()
 
