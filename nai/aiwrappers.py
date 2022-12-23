@@ -7,8 +7,8 @@ import matplotlib.pyplot as plt
 
 class MLP:
     def __init__(self, layers):
-        self.net = MLPNeuralNetwork(layers, activation=ReLU)
-        self.net.learning_rate = 0.05
+        self.net = MLPNeuralNetwork(layers, activation=Sigmoid)
+        self.net.learning_rate = 0.01
 
     def train(self, dataset, epochs=10, batch_size=32):
         #if dataset.shape != (1, self.net.layerSizes[0]):
@@ -21,10 +21,11 @@ class MLP:
         for epoch in range(epochs):
             print(f"Epoch {epoch+1}/{epochs}")
 
+            averageLoss = 0
+
             dataset.shuffle()
 
-            dwSum = [zero(self.net.layerSizes[i] * self.net.layerSizes[i + 1]) for i in range(self.net.nLayers - 1)]
-            dbSum = [zero(self.net.layerSizes[i + 1]) for i in range(self.net.nLayers - 1)]
+            errorSum = [zero(self.net.layerSizes[i + 1]) for i in range(self.net.nLayers - 1)]
 
             for batch in range(batch_size):
                 sample = dataset.retrieveSample()
@@ -32,38 +33,52 @@ class MLP:
                 self.net.layers[0] = sample.data
                 self.net.forwardPropagate()
 
-                # Debug
-                lossArray.append(self.net.calculateLoss())
-
                 self.net.expectedOutput = sample.output
-                dws, dbs = self.net.calcDeltas()
+                errs = self.net.calcErrors()
+
+                averageLoss += self.net.calculateLoss()
 
                 # Add new deltas to sum
                 for layer in range(self.net.nLayers - 1):
-                    print("len(dbs)", len(dbs[layer]))
-                    print("len(dbSum)", len(dbSum[layer]))
+                    for i in range(len(errs[layer])):
+                        errorSum[layer][i] += errs[layer][i]
 
-                    print(f"Layer {layer}")
-                    for i, dw, in enumerate(dws[layer]):
-                        dwSum[layer][i] += dw
+            for layer in range(self.net.nLayers - 1):
+                for i in range(len(errs[layer])):
+                    errorSum[layer][i] /= batch_size
 
-                    for i, db in enumerate(dbs[layer]):
-                        print(i)
-                        dbSum[layer][i] += db
+            self.net.backPropagate(errorSum)
 
-            # Update weights and biases with average delts
-            for layer, (dwL, dbL) in enumerate(zip(dws, dbs)):
-                for i, dw, in enumerate(dwL):
-                    self.net.weights[layer][i] += dwSum[layer][i] / batch_size
-
-                for i, db in enumerate(dbL):
-                    self.net.biases[layer][i] += dbSum[layer][i] / batch_size
+            # Debug
+            lossArray.append(averageLoss / batch_size)
 
         # Debug
-        plt.plot(range(epochs*batch_size), lossArray)
+        plt.plot(range(epochs), lossArray)
         plt.grid()
-        plt.legend()
         plt.show()
+
+    def test(self, dataset):
+        #if dataset.shape != (1, self.net.layerSizes[0]):
+        #    raise ValueError(f"Dataset shape {dataset.shape} does not match the neural network's input shape (1, {self.net.layerSizes[0]}).")
+
+        #dataset.useSet(SetTypes.Train)
+
+        dataset.shuffle()
+
+        averageLoss = 0
+        nSamples = 500
+
+        for i in range(nSamples):
+            sample = dataset.retrieveSample()
+
+            self.net.layers[0] = sample.data
+            self.net.forwardPropagate()
+
+            self.net.expectedOutput = sample.output
+            averageLoss += self.net.calculateLoss()
+
+        averageLoss /= nSamples
+        print(f"Average loss for {nSamples} samples is {averageLoss}")
 
     def _epoch(self, batch_size):
         pass

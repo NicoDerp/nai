@@ -137,26 +137,32 @@ class MNIST(Dataset):
         n = random_exclusion(0, 60000, self.used)
         self.used.add(n)
 
-        print("nth", n)
+        #print("nth", n)
 
         # self.current == SetTypes.Train
         with open(os.path.join(self.RAW_DIR, "train-images-idx3-ubyte"), "rb") as f:
             f.seek(n * 28 * 28 + 16)
             data = [int.from_bytes(f.read(1), "big") for i in range(28 * 28)]
+            data = list(map(lambda a:a/255, data))
 
         with open(os.path.join(self.RAW_DIR, "train-labels-idx1-ubyte"), "rb") as f:
             f.seek(n * 1 + 8)
             label = int.from_bytes(f.read(1), "big")
 
-        data = numpy.array(data)
-        twod = numpy.reshape(data, (28, 28))
+            # This is going from one-hot encoded to categorial
+            output = [0] * 10
+            output[label] = 1
+
+        #data = numpy.array(data)
+        #twod = numpy.reshape(data, (28, 28))
         
-        print(label)
+        #print(label)
+        #print(output)
 
         #plt.matshow(twod)
         #plt.show()
 
-        return Sample(data, label)
+        return Sample(data, output)
 
     def _initVars(self):
         # Directories for saving the data => adapt to your needs
@@ -164,9 +170,6 @@ class MNIST(Dataset):
         self.MNIST_DIR = os.path.join(self.DATA_DIR, "MNIST")
         self.RAW_DIR = os.path.join(self.MNIST_DIR, "raw")
         self.MNIST_ZIP = os.path.join(self.DATA_DIR, "mnist.zip")
-
-    def trainFiles(self):
-        return os.path.join(self.RAW_DIR, "train-images-idx3-ubyte"), os.path.join(self.RAW_DIR, "train-labels-idx1-ubyte")
 
     def isDownloaded(self):
         if not all([os.path.isfile(os.path.join(self.RAW_DIR, fn))] for fn in MNIST.FILES):

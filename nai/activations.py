@@ -41,4 +41,11 @@ class TanH(ActivationFunction):
     def df(x):
         return 1 - math.tanh(x) ** 2
 
+class Softmax(ActivationFunction):
+    name = "Softmax"
+
+    def f(x):
+        e_x = math.e ** (x - np.max(x))
+        return e_x / e_x.sum(x)
+
 

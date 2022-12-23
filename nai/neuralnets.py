@@ -41,13 +41,11 @@ class MLPNeuralNetwork:
 
         self.weights = []
         self.biases = []
-        self.lastErrors = []
         for i in range(self.nLayers - 1):
             #self.weights.append(one(len(self.layers[i]) * len(self.layers[i + 1])))
             self.weights.append(nRandom(len(self.layers[i]) * len(self.layers[i + 1])))
             #self.biases.append(zero(len(self.layers[i+1])))
             self.biases.append(nRandom(len(self.layers[i + 1])))
-            self.lastErrors.append(zero(len(self.layers[i + 1])))
 
         self.activation = activation
 
@@ -76,41 +74,14 @@ class MLPNeuralNetwork:
                 s = self.activation.f(s)
                 layer2[j] = s
 
-    def calcDeltas(self):
-        dws = []
-        dbs = []
-        # Loop through each layer
-        for i in range(self.nLayers - 1):
-            layer = self.layers[i]
+    def calcErrors(self):
+        lastErrors = [zero(len(self.layers[i + 1])) for i in range(self.nLayers - 1)]
 
-            dwl = []
-            dbl = zero(len(layer))
-
-            # Loop through the neurons in the layer to the left
-            for j in range(len(self.layers[i - 1])):
-                # Loop through the neurons in this layer
-                for k in range(len(layer)):
-                    # Get the weight between input (j) and output (k) (w k,j)
-                    e = self.lastErrors[i - 1][k] # Get the error from neuron in this layer
-
-                    # Finally, calculate dw and db
-                    dw = -self.learning_rate * self.layers[i - 1][j] * e
-                    db = -self.learning_rate * e
-
-                    dbl[k] += db
-
-            dws.append(dwl)
-            dbs.append(dbl)
-
-        return dws, dbs
-
-
-    def backPropagate(self):
         # Loop through each neuron in the output layer and calculate errors
         for k, n in enumerate(self.layers[-1]):
             dk = n - self.expectedOutput[k]
             err = dk * self.activation.df(self.zLayers[-1][k])
-            self.lastErrors[-1][k] = err
+            lastErrors[-1][k] = err
 
         # Loop through each layer except output layer backwards
         for i in range(self.nLayers - 1, 0, -1):
@@ -125,8 +96,28 @@ class MLPNeuralNetwork:
 
                     # Get the weight between input (j) and output (k) (w k,j)
                     w = self.weights[i - 1][kw]
-                    e = self.lastErrors[i - 1][k] # Get the error from neuron in this layer
+                    e = lastErrors[i - 1][k] # Get the error from neuron in this layer
                     werrSum += w * e
+
+                # Calculated error for neuron on the layer to the left
+                if i > 1:
+                    err = werrSum * self.activation.df(self.zLayers[i - 2][j])
+                    lastErrors[i - 2][j] = err
+
+        return lastErrors
+
+    def backPropagate(self, errorList):
+        # Loop through each layer except output layer backwards
+        for i in range(self.nLayers - 1, 0, -1):
+            layer = self.layers[i]
+
+            # Loop through the neurons in the layer to the left
+            for j in range(len(self.layers[i - 1])):
+                # Loop through the neurons in this layer
+                for k in range(len(layer)):
+                    kw = j * len(self.layers[i]) + k # left*sizeof(right) + right
+
+                    e = errorList[i - 1][k] # Get the error from neuron in this layer
 
                     # Finally, calculate dw and db
                     dw = -self.learning_rate * self.layers[i - 1][j] * e
@@ -137,11 +128,6 @@ class MLPNeuralNetwork:
 
                     # Update the bias for the neuron on this layer
                     self.biases[i - 1][k] += db
-
-                # Calculated error for neuron on the layer to the left
-                if i > 1:
-                    err = werrSum * self.activation.df(self.zLayers[i - 2][j])
-                    self.lastErrors[i - 2][j] = err
 
     def calculateLoss(self):
         E = 0

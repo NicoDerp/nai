@@ -4,11 +4,20 @@ from nai import *
 
 dataset = datasets.MNIST("datasets", download=True)
 
-model = aiwrappers.MLP([784, 5, 3, 10])
+model = aiwrappers.MLP([784, 100, 100, 10])
 
-model.train(dataset, epochs=50, batch_size=10)
+model.train(dataset, epochs=5, batch_size=20)
 
 #model.test(dataset)
+
+sample = dataset.retrieveSample()
+print(sample.data, sample.output)
+
+model.net.layers[0] = sample.data
+model.net.forwardPropagate()
+print(model.net.layers[-1])
+
+print(model.net.calculateLoss())
 
 exit()
 
