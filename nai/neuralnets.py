@@ -53,7 +53,7 @@ class MLPNeuralNetwork:
 
         print("Using activation function:", activation.name)
 
-    def forwardPropagation(self):
+    def forwardPropagate(self):
         # Loop through input and hidden layers
         for i in range(self.nLayers - 1):
             layer1 = self.layers[i]
@@ -79,12 +79,12 @@ class MLPNeuralNetwork:
     def calcDeltas(self):
         dws = []
         dbs = []
-        # Loop through each layer except output layer backwards
-        for i in range(self.nLayers - 1, 0, -1):
+        # Loop through each layer
+        for i in range(self.nLayers - 1):
             layer = self.layers[i]
 
             dwl = []
-            dbl = []
+            dbl = zero(len(layer))
 
             # Loop through the neurons in the layer to the left
             for j in range(len(self.layers[i - 1])):
@@ -97,8 +97,7 @@ class MLPNeuralNetwork:
                     dw = -self.learning_rate * self.layers[i - 1][j] * e
                     db = -self.learning_rate * e
 
-                    dwl.append(dw)
-                    dbl.append(db)
+                    dbl[k] += db
 
             dws.append(dwl)
             dbs.append(dbl)

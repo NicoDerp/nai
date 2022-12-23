@@ -11,9 +11,10 @@ from tqdm import tqdm
 
 import requests
 
-from random import randint
+import random
 
-
+import matplotlib.pyplot as plt
+import numpy
 
 class Dataset:
     FILES = []
@@ -23,8 +24,7 @@ class Dataset:
         self.shape = (0, 0)
 
         self.current = None
-        self.offset = 0
-        self.used = []
+        self.used = set()
 
         self._initVars()
 
@@ -43,7 +43,8 @@ class Dataset:
     def _initVars(self):
         pass
 
-    def shuffle()
+    def shuffle(self):
+        pass
 
     def retrieveSample(self):
         pass
@@ -55,7 +56,7 @@ class Dataset:
         pass
 
 
-def Sample:
+class Sample:
     def __init__(self, data, output):
         self.data = data
         self.output = output
@@ -63,6 +64,20 @@ def Sample:
 class SetTypes:
     Train = 0
     Test = 1
+
+
+# Credit to TeaCoast
+def random_exclusion(start, stop, excluded):
+    """Function for getting a random number with some numbers excluded"""
+    #excluded = set(excluded) # if input is set then not needed
+    value = random.randint(start, stop - len(excluded)) # Or you could use randrange
+    for exclusion in tuple(excluded):
+        if value < exclusion:
+            break
+        value += 1
+    return value
+
+
 
 class MNIST(Dataset):
     FILES = ["t10k-images-idx3-ubyte", "t10k-labels-idx1-ubyte", "train-images-idx3-ubyte", "train-labels-idx1-ubyte"]
@@ -116,15 +131,32 @@ class MNIST(Dataset):
         self.current = s
 
     def shuffle(self):
-        self.used = []
+        self.used = set()
 
     def retrieveSample(self):
-        # self.current == SetTypes.Train
-        with open(os.path.join(self.RAW_DIR, "train-images-idx3-ubyte")) as dataFile:
-            pass
+        n = random_exclusion(0, 60000, self.used)
+        self.used.add(n)
 
-        with open(os.path.join(self.RAw_dir, "train-labels-idx1-ubyte")) as labelFile:
-            pass
+        print("nth", n)
+
+        # self.current == SetTypes.Train
+        with open(os.path.join(self.RAW_DIR, "train-images-idx3-ubyte"), "rb") as f:
+            f.seek(n * 28 * 28 + 16)
+            data = [int.from_bytes(f.read(1), "big") for i in range(28 * 28)]
+
+        with open(os.path.join(self.RAW_DIR, "train-labels-idx1-ubyte"), "rb") as f:
+            f.seek(n * 1 + 8)
+            label = int.from_bytes(f.read(1), "big")
+
+        data = numpy.array(data)
+        twod = numpy.reshape(data, (28, 28))
+        
+        print(label)
+
+        #plt.matshow(twod)
+        #plt.show()
+
+        return Sample(data, label)
 
     def _initVars(self):
         # Directories for saving the data => adapt to your needs
@@ -140,20 +172,20 @@ class MNIST(Dataset):
         if not all([os.path.isfile(os.path.join(self.RAW_DIR, fn))] for fn in MNIST.FILES):
             return False
 
-        with open("train-images-idx3-ubyte") as f:
-            if f.read(1) != 2051:
+        with open(os.path.join(self.RAW_DIR, "train-images-idx3-ubyte"), "rb") as f:
+            if int.from_bytes(f.read(4), "big") != 2051:
                 raise ValueError("Magic number for 'train-images-idx3-ubyte' does not match.")
 
-        with open("train-labels-idx1-ubyte") as f:
-            if f.read(1) != 2049:
+        with open(os.path.join(self.RAW_DIR, "train-labels-idx1-ubyte"), "rb") as f:
+            if int.from_bytes(f.read(4), "big") != 2049:
                 raise ValueError("Magic number for 'train-labels-idx1-ubyte' does not match.")
 
-        with open("t10k-images-idx3-ubyte") as f:
-            if f.read(1) != 2051:
+        with open(os.path.join(self.RAW_DIR, "t10k-images-idx3-ubyte"), "rb") as f:
+            if int.from_bytes(f.read(4), "big") != 2051:
                 raise ValueError("Magic number for 't10k-images-idx3-ubyte' does not match.")
 
-        with open("t10k-labels-idx1-ubyte") as f:
-            if f.read(1) != 2049:
+        with open(os.path.join(self.RAW_DIR, "t10k-labels-idx1-ubyte"), "rb") as f:
+            if int.from_bytes(f.read(4), "big") != 2049:
                 raise ValueError("Magic number for 't10k-labels-idx1-ubyte' does not match.")
 
         return True
