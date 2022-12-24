@@ -19,26 +19,8 @@ import numpy
 class Dataset:
     FILES = []
 
-    def __init__(self, path, download=False, force=False):
-        self.path = path
-        self.shape = (0, 0)
-
-        self.current = None
-        self.used = set()
-
-        self._initVars()
-
-        # Don't want to download and not downloaded
-        if not download and not self.isDownloaded():
-            raise ValueError(f"MNIST is not downloaded in '{path}' and download is set False.")
-
-        # Download and don't care if it is already installed
-        if force:
-            self._download()
-
-        # Want to download and not downloaded
-        elif download and not self.isDownloaded():
-            self._download()
+    def __init__(self, *args, **kwargs):
+        pass
 
     def _initVars(self):
         pass
@@ -78,12 +60,56 @@ def random_exclusion(start, stop, excluded):
     return value
 
 
+class XOR(Dataset):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self.examples = [Sample([0, 0], [0]),
+                    Sample([0, 1], [1]),
+                    Sample([1, 0], [1]),
+                    Sample([1, 1], [0])]
+
+        self.off = 0
+
+    # Nothing to download
+    def _download(self):
+        pass
+
+    def retrieveBatch(self, batch_size):
+        self.off = (self.off + 1) % 4
+
+        return [self.examples[(self.off + i) % 4] for i in range(batch_size)]
+
 
 class MNIST(Dataset):
     FILES = ["t10k-images-idx3-ubyte", "t10k-labels-idx1-ubyte", "train-images-idx3-ubyte", "train-labels-idx1-ubyte"]
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
+        self.path = path
+        self.shape = (0, 0)
+
+        self.current = None
+        self.used = set()
+
+        # Directories for saving the data => adapt to your needs
+        self.DATA_DIR = os.path.join(os.getcwd(), self.path)
+        self.MNIST_DIR = os.path.join(self.DATA_DIR, "MNIST")
+        self.RAW_DIR = os.path.join(self.MNIST_DIR, "raw")
+        self.MNIST_ZIP = os.path.join(self.DATA_DIR, "mnist.zip")
+
+        # Don't want to download and not downloaded
+        if not download and not self.isDownloaded():
+            raise ValueError(f"MNIST is not downloaded in '{path}' and download is set False.")
+
+        # Download and don't care if it is already installed
+        if force:
+            self._download()
+
+        # Want to download and not downloaded
+        elif download and not self.isDownloaded():
+            self._download()
 
         self.shape = (28, 28) # Don't hardcode
 
@@ -133,6 +159,40 @@ class MNIST(Dataset):
     def shuffle(self):
         self.used = set()
 
+    def retrieveBatch(self, batch_size):
+        samples = []
+
+        with open(os.path.join(self.RAW_DIR, "train-images-idx3-ubyte"), "rb") as dataFile, open(os.path.join(self.RAW_DIR, "train-labels-idx1-ubyte"), "rb") as labelFile:
+            n = random_exclusion(0, 60000, self.used)
+            self.used.add(n)
+
+            #print("nth", n)
+
+            # self.current == SetTypes.Train
+            dataFile.seek(n * 28 * 28 + 16)
+            data = [int.from_bytes(dataFile.read(1), "big") for i in range(28 * 28)]
+            data = list(map(lambda a:a/255, data))
+
+            labelFile.seek(n * 1 + 8)
+            label = int.from_bytes(labelFile.read(1), "big")
+
+            # This is going from one-hot encoded to categorial
+            output = [0] * 10
+            output[label] = 1
+
+            #data = numpy.array(data)
+            #twod = numpy.reshape(data, (28, 28))
+            
+            #print(label)
+            #print(output)
+
+            #plt.matshow(twod)
+            #plt.show()
+
+            samples.append(Sample(data, output))
+
+        return samples
+
     def retrieveSample(self):
         n = random_exclusion(0, 60000, self.used)
         self.used.add(n)
@@ -163,13 +223,6 @@ class MNIST(Dataset):
         #plt.show()
 
         return Sample(data, output)
-
-    def _initVars(self):
-        # Directories for saving the data => adapt to your needs
-        self.DATA_DIR = os.path.join(os.getcwd(), self.path)
-        self.MNIST_DIR = os.path.join(self.DATA_DIR, "MNIST")
-        self.RAW_DIR = os.path.join(self.MNIST_DIR, "raw")
-        self.MNIST_ZIP = os.path.join(self.DATA_DIR, "mnist.zip")
 
     def isDownloaded(self):
         if not all([os.path.isfile(os.path.join(self.RAW_DIR, fn))] for fn in MNIST.FILES):

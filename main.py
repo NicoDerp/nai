@@ -2,21 +2,27 @@
 
 from nai import *
 
-dataset = datasets.MNIST("datasets", download=True)
+#dataset = datasets.MNIST("datasets", download=True)
+dataset = datasets.XOR()
 
-model = aiwrappers.MLP([784, 100, 100, 10])
+#model = aiwrappers.MLP([784, 100, 100, 10])
+model = aiwrappers.MLP([2, 2, 1])
 
-model.train(dataset, epochs=5, batch_size=20)
+model.train(dataset, epochs=50, batch_size=1)
 
 #model.test(dataset)
 
-sample = dataset.retrieveSample()
-print(sample.data, sample.output)
+#sample = dataset.retrieveSample()
+#print(sample.data, sample.output)
 
-model.net.layers[0] = sample.data
+#model.net.layers[0] = sample.data
+print("\nTest:")
+
+model.net.layers[0] = [1, 0]
 model.net.forwardPropagate()
 print(model.net.layers[-1])
 
+model.net.expectedOutput = [1]
 print(model.net.calculateLoss())
 
 exit()

@@ -16,6 +16,7 @@ class Sigmoid(ActivationFunction):
     name = "Sigmoid"
 
     def f(x):
+        #print(f"{-x:.10f}")
         return 1 / (1 + math.e**(-x))
 
     def df(x):

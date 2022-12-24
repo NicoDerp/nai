@@ -42,10 +42,10 @@ class MLPNeuralNetwork:
         self.weights = []
         self.biases = []
         for i in range(self.nLayers - 1):
-            #self.weights.append(one(len(self.layers[i]) * len(self.layers[i + 1])))
-            self.weights.append(nRandom(len(self.layers[i]) * len(self.layers[i + 1])))
-            #self.biases.append(zero(len(self.layers[i+1])))
-            self.biases.append(nRandom(len(self.layers[i + 1])))
+            self.weights.append(one(len(self.layers[i]) * len(self.layers[i + 1])))
+            #self.weights.append(nRandom(len(self.layers[i]) * len(self.layers[i + 1])))
+            self.biases.append(zero(len(self.layers[i+1])))
+            #self.biases.append(nRandom(len(self.layers[i + 1])))
 
         self.activation = activation
 
@@ -132,7 +132,9 @@ class MLPNeuralNetwork:
     def calculateLoss(self):
         E = 0
         for i, n in enumerate(self.layers[-1]):
-            E += (self.expectedOutput[i] - n) ** 2
+            #print(f"i {i}, n {n}")
+            E += (n - self.expectedOutput[i]) ** 2
+            #print(f"E {E}")
 
         return E / len(self.layers[-1])
 
