@@ -1,6 +1,9 @@
 
 import random
 import math
+import numpy as np
+
+from numba import njit
 
 from nai.activations import *
 
@@ -9,12 +12,6 @@ def nTimes(func, n):
     for i in range(n):
         l.append(func())
     return l
-
-def zero(n):
-    return [0] * n
-
-def one(n):
-    return [1] * n
 
 def nRandom(n):
     l = []
@@ -40,25 +37,23 @@ class MLPNeuralNetwork:
         if len(layerSizes) < 3:
             raise ValueError("A multilayer perceptron must consist of an input layer, atleast one hidden layer and an ouuput layer.")
 
-        self.expectedOutput = nTimes(lambda:5,layerSizes[-1])
+        self.expectedOutput = np.zeros(layerSizes[-1])
 
         self.nLayers = len(layerSizes)
         self.layerSizes = layerSizes
-        self.layers = [zero(layerSizes[i]) for i in range(self.nLayers)]
-        self.zLayers = [zero(layerSizes[i]) for i in range(1, self.nLayers)] # The same as layers but every neuron is before activation
+        self.layers = np.array([np.zeros(layerSizes[i]) for i in range(self.nLayers)])
+        self.zLayers = np.array([np.zeros(layerSizes[i]) for i in range(1, self.nLayers)]) # The same as layers but every neuron is before activation
 
-        self.weights = []
-        self.biases = []
-        for i in range(self.nLayers - 1):
-            #self.weights.append(one(len(self.layers[i]) * len(self.layers[i + 1])))
-            self.weights.append(nRandom(len(self.layers[i]) * len(self.layers[i + 1])))
-            #self.biases.append(zero(len(self.layers[i+1])))
-            self.biases.append(nRandom(len(self.layers[i + 1])))
+        self.weights = np.array([np.random.uniform(size=layerSizes[i] * layerSizes[i + 1]) for i in range(self.nLayers - 1)])
+        #self.weights = np.array([np.zeros(layerSizes[i] * layerSizes[i + 1]) for i in range(self.nLayers - 1)])
+        self.biases = np.array([np.random.uniform(size=layerSizes[i + 1]) for i in range(self.nLayers - 1)])
+        #self.biases = np.array([np.zeros(layerSizes[i + 1]) for i in range(self.nLayers - 1)])
 
         self.activation = activation
 
         print("Using activation function:", activation.name)
 
+    @njit
     def forwardPropagate(self):
         # Loop through input and hidden layers
         for i in range(self.nLayers - 1):
@@ -83,8 +78,9 @@ class MLPNeuralNetwork:
                 s = self.activation.f(s)
                 layer2[j] = s
 
+    @njit
     def calcErrors(self):
-        lastErrors = [zero(len(self.layers[i + 1])) for i in range(self.nLayers - 1)]
+        lastErrors = np.empty_like(self.biases)
 
         # Loop through each neuron in the output layer and calculate errors
         for k, n in enumerate(self.layers[-1]):
@@ -115,6 +111,7 @@ class MLPNeuralNetwork:
 
         return lastErrors
 
+    @njit
     def backPropagate(self, errorList):
         # Loop through each layer except output layer backwards
         for i in range(self.nLayers - 1, 0, -1):
@@ -129,12 +126,8 @@ class MLPNeuralNetwork:
                     e = errorList[i - 1][k] # Get the error from neuron in this layer
 
                     # Finally, calculate dw and db
-                    if self.adam:
-                        dw = -self.learning_rate * Mht / math.sqrt(Rht + self.epsilon)
-                        db = -self.learning_rate * e
-                    else:
-                        dw = -self.learning_rate * self.layers[i - 1][j] * e
-                        db = -self.learning_rate * e
+                    dw = -self.learning_rate * self.layers[i - 1][j] * e
+                    db = -self.learning_rate * e
 
                     # Update the weight between this layer and the one to the left
                     self.weights[i - 1][kw] += dw
@@ -142,6 +135,7 @@ class MLPNeuralNetwork:
                     # Update the bias for the neuron on this layer
                     self.biases[i - 1][k] += db
 
+    @njit
     def calculateLoss(self):
         E = 0
         for i, n in enumerate(self.layers[-1]):

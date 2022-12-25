@@ -4,12 +4,16 @@ from nai.activations import *
 
 import matplotlib.pyplot as plt
 
+import numpy as np
+
+from numba import njit
 
 class MLP:
     def __init__(self, layers, adam=False):
 
         self.net = MLPNeuralNetwork(layers, 0.2, activation=Sigmoid, adam=adam)
 
+    @njit
     def train(self, dataset, epochs=10, batch_size=32):
         #if dataset.shape != (1, self.net.layerSizes[0]):
         #    raise ValueError(f"Dataset shape {dataset.shape} does not match the neural network's input shape (1, {self.net.layerSizes[0]}).")
@@ -29,7 +33,7 @@ class MLP:
             dataset.shuffle()
 
             for batch in range(nBatches):
-                errorSum = [zero(self.net.layerSizes[i + 1]) for i in range(self.net.nLayers - 1)]
+                errorSum = [np.zeros(self.net.layerSizes[i + 1]) for i in range(self.net.nLayers - 1)]
 
                 samples = dataset.retrieveBatch(batch_size)
                 #print([(sample.data, sample.output) for sample in samples])
@@ -58,8 +62,8 @@ class MLP:
 
                 self.net.backPropagate(errorSum)
 
-                # Debug
-                lossArray.append(averageLoss / batch_size)
+            # Debug
+            lossArray.append(averageLoss / batch_size)
 
             # Optimizations
             #if self.adam:

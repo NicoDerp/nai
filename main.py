@@ -8,7 +8,7 @@ dataset = datasets.MNIST("datasets", download=True)
 model = aiwrappers.MLP([784, 32, 10])
 #model = aiwrappers.MLP([2, 2, 1])
 
-model.train(dataset, epochs=50, batch_size=32)
+model.train(dataset, epochs=1, batch_size=32)
 
 #model.test(dataset)
 
