@@ -8,6 +8,42 @@ import numpy as np
 
 from numba import njit
 
+#@njit(fastmath=True)
+def _doBatch(net, dataset, batch_size):
+    errorSum = [np.zeros(net.layerSizes[i + 1]) for i in range(net.nLayers - 1)]
+
+    averageLoss = 0
+
+    samples = dataset.retrieveBatch(batch_size)
+    #print([(sample.data, sample.output) for sample in samples])
+
+    for sample in samples:
+        #print("\nUsing data:", sample.data)
+        net.layers[0] = sample.data
+        net.forwardPropagate()
+        #print("Got answ:", self.net.layers[-1])
+
+        net.expectedOutput = sample.output
+        errs = net.calcErrors()
+
+        loss = net.calculateLoss()
+        averageLoss += loss
+        #print(f"Loss: {loss:.10f}")
+
+        # Add new deltas to sum
+        for layer in range(net.nLayers - 1):
+            for i in range(len(errs[layer])):
+                errorSum[layer][i] += errs[layer][i]
+
+    for layer in range(net.nLayers - 1):
+        for i in range(len(errorSum[layer])):
+            errorSum[layer][i] /= batch_size
+
+    net.backPropagate(errorSum)
+
+    return averageLoss / len(samples)
+
+
 class MLP:
     def __init__(self, layers, adam=False):
 
@@ -17,52 +53,26 @@ class MLP:
         #if dataset.shape != (1, self.net.layerSizes[0]):
         #    raise ValueError(f"Dataset shape {dataset.shape} does not match the neural network's input shape (1, {self.net.layerSizes[0]}).")
 
-        lossArray: List[float] = np.empty(epochs)
-
         #dataset.useSet(SetTypes.Train)
 
         nBatches = math.ceil(dataset.size / batch_size)
         print(f"Doing {nBatches} batches per epoch")
 
+        lossArray: List[float] = np.empty(epochs*nBatches)
+
+        batch = 0
         for epoch in range(epochs):
             print(f"Epoch {epoch+1}/{epochs}")
-
-            averageLoss = 0
 
             dataset.shuffle()
 
             for batch in range(nBatches):
-                errorSum = [np.zeros(self.net.layerSizes[i + 1]) for i in range(self.net.nLayers - 1)]
-
-                samples = dataset.retrieveBatch(batch_size)
-                #print([(sample.data, sample.output) for sample in samples])
-
-                for sample in samples:
-                    #print("\nUsing data:", sample.data)
-                    self.net.layers[0] = sample.data
-                    self.net.forwardPropagate()
-                    #print("Got answ:", self.net.layers[-1])
-
-                    self.net.expectedOutput = sample.output
-                    errs = self.net.calcErrors()
-
-                    loss = self.net.calculateLoss()
-                    averageLoss += loss
-                    #print(f"Loss: {loss:.10f}")
-
-                    # Add new deltas to sum
-                    for layer in range(self.net.nLayers - 1):
-                        for i in range(len(errs[layer])):
-                            errorSum[layer][i] += errs[layer][i]
-
-                for layer in range(self.net.nLayers - 1):
-                    for i in range(len(errorSum[layer])):
-                        errorSum[layer][i] /= batch_size
-
-                self.net.backPropagate(errorSum)
+                average_loss = _doBatch(self.net, dataset, batch_size)
+                lossArray[batch] = average_loss
+                batch += 1
 
             # Debug
-            lossArray.append(averageLoss / batch_size)
+            #lossArray.append(averageLoss / batch_size)
 
             # Optimizations
             #if self.adam:
