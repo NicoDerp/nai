@@ -13,12 +13,11 @@ class MLP:
 
         self.net = MLPNeuralNetwork(layers, 0.2, activation=Sigmoid, adam=adam)
 
-    @njit
     def train(self, dataset, epochs=10, batch_size=32):
         #if dataset.shape != (1, self.net.layerSizes[0]):
         #    raise ValueError(f"Dataset shape {dataset.shape} does not match the neural network's input shape (1, {self.net.layerSizes[0]}).")
 
-        lossArray = []
+        lossArray: List[float] = np.empty(epochs)
 
         #dataset.useSet(SetTypes.Train)
 

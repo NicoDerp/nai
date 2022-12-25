@@ -41,12 +41,12 @@ class MLPNeuralNetwork:
 
         self.nLayers = len(layerSizes)
         self.layerSizes = layerSizes
-        self.layers = np.array([np.zeros(layerSizes[i]) for i in range(self.nLayers)])
-        self.zLayers = np.array([np.zeros(layerSizes[i]) for i in range(1, self.nLayers)]) # The same as layers but every neuron is before activation
+        self.layers = np.array([np.zeros(layerSizes[i]) for i in range(self.nLayers)], dtype=object)
+        self.zLayers = np.array([np.zeros(layerSizes[i]) for i in range(1, self.nLayers)], dtype=object) # The same as layers but every neuron is before activation
 
-        self.weights = np.array([np.random.uniform(size=layerSizes[i] * layerSizes[i + 1]) for i in range(self.nLayers - 1)])
+        self.weights = np.array([np.random.uniform(size=layerSizes[i] * layerSizes[i + 1]) for i in range(self.nLayers - 1)], dtype=object)
         #self.weights = np.array([np.zeros(layerSizes[i] * layerSizes[i + 1]) for i in range(self.nLayers - 1)])
-        self.biases = np.array([np.random.uniform(size=layerSizes[i + 1]) for i in range(self.nLayers - 1)])
+        self.biases = np.array([np.random.uniform(size=layerSizes[i + 1]) for i in range(self.nLayers - 1)], dtype=object)
         #self.biases = np.array([np.zeros(layerSizes[i + 1]) for i in range(self.nLayers - 1)])
 
         self.activation = activation
