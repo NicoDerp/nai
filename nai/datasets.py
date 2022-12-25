@@ -17,11 +17,6 @@ import matplotlib.pyplot as plt
 import numpy
 
 class Dataset:
-    FILES = []
-
-    def __init__(self, *args, **kwargs):
-        pass
-
     def _initVars(self):
         pass
 
@@ -62,7 +57,6 @@ def random_exclusion(start, stop, excluded):
 
 class XOR(Dataset):
     def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
 
         self.examples = [Sample([0, 0], [0]),
                     Sample([0, 1], [1]),
@@ -84,8 +78,7 @@ class XOR(Dataset):
 class MNIST(Dataset):
     FILES = ["t10k-images-idx3-ubyte", "t10k-labels-idx1-ubyte", "train-images-idx3-ubyte", "train-labels-idx1-ubyte"]
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(self, path, download=False, force=False):
 
         self.path = path
         self.shape = (0, 0)

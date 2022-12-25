@@ -2,28 +2,42 @@
 
 from nai import *
 
-#dataset = datasets.MNIST("datasets", download=True)
-dataset = datasets.XOR()
+dataset = datasets.MNIST("datasets", download=True)
+#dataset = datasets.XOR()
 
-#model = aiwrappers.MLP([784, 100, 100, 10])
-model = aiwrappers.MLP([2, 2, 1])
+model = aiwrappers.MLP([784, 32, 10])
+#model = aiwrappers.MLP([2, 2, 1])
 
-model.train(dataset, epochs=50, batch_size=1)
+model.train(dataset, epochs=50, batch_size=32)
 
 #model.test(dataset)
 
-#sample = dataset.retrieveSample()
-#print(sample.data, sample.output)
+print("\n\nTest:")
 
-#model.net.layers[0] = sample.data
-print("\nTest:")
+dataset.shuffle()
 
-model.net.layers[0] = [1, 0]
-model.net.forwardPropagate()
-print(model.net.layers[-1])
+for i in range(5):
 
-model.net.expectedOutput = [1]
-print(model.net.calculateLoss())
+    sample = dataset.retrieveSample()
+    print(sample.output)
+
+    model.net.layers[0] = sample.data
+
+    #model.net.layers[0] = [1, 0]
+    model.net.forwardPropagate()
+    #print(model.net.layers[-1])
+
+    biggest = 0
+    biggest_i = 0
+    for i, n in enumerate(model.net.layers[-1]):
+        if n > biggest:
+            biggest = n
+            biggest_i = i
+
+    print(f"Predicted {biggest_i} with probability of {biggest}")
+
+#model.net.expectedOutput = [1]
+#print(model.net.calculateLoss())
 
 exit()
 

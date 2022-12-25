@@ -50,10 +50,10 @@ class MLPNeuralNetwork:
         self.weights = []
         self.biases = []
         for i in range(self.nLayers - 1):
-            self.weights.append(one(len(self.layers[i]) * len(self.layers[i + 1])))
-            #self.weights.append(nRandom(len(self.layers[i]) * len(self.layers[i + 1])))
-            self.biases.append(zero(len(self.layers[i+1])))
-            #self.biases.append(nRandom(len(self.layers[i + 1])))
+            #self.weights.append(one(len(self.layers[i]) * len(self.layers[i + 1])))
+            self.weights.append(nRandom(len(self.layers[i]) * len(self.layers[i + 1])))
+            #self.biases.append(zero(len(self.layers[i+1])))
+            self.biases.append(nRandom(len(self.layers[i + 1])))
 
         self.activation = activation
 
@@ -62,6 +62,7 @@ class MLPNeuralNetwork:
     def forwardPropagate(self):
         # Loop through input and hidden layers
         for i in range(self.nLayers - 1):
+            #print(f"Layer {i}")
             layer1 = self.layers[i]
             layer2 = self.layers[i + 1]
             weights = self.weights[i]
