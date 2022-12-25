@@ -24,10 +24,18 @@ def nRandom(n):
     return l
 
 class MLPNeuralNetwork:
-    def __init__(self, layerSizes, activation=Sigmoid):
+    def __init__(self, layerSizes, learning_rate, activation=Sigmoid, adam=False):
 
-        self.momentum = 1.0
-        self.learning_rate = 0.5
+        self.learning_rate = learning_rate
+
+        self.adam = adam
+
+        # Adam optimizer parameters
+        if self.adam:
+            self.momentum = 0.9
+            self.beta1 = 0.9
+            self.beta2 = 0.999
+            self.epsilon = 10**-8
 
         if len(layerSizes) < 3:
             raise ValueError("A multilayer perceptron must consist of an input layer, atleast one hidden layer and an ouuput layer.")
@@ -120,8 +128,12 @@ class MLPNeuralNetwork:
                     e = errorList[i - 1][k] # Get the error from neuron in this layer
 
                     # Finally, calculate dw and db
-                    dw = -self.learning_rate * self.layers[i - 1][j] * e
-                    db = -self.learning_rate * e
+                    if self.adam:
+                        dw = -self.learning_rate * Mht / math.sqrt(Rht + self.epsilon)
+                        db = -self.learning_rate * e
+                    else:
+                        dw = -self.learning_rate * self.layers[i - 1][j] * e
+                        db = -self.learning_rate * e
 
                     # Update the weight between this layer and the one to the left
                     self.weights[i - 1][kw] += dw

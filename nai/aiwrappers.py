@@ -6,9 +6,11 @@ import matplotlib.pyplot as plt
 
 
 class MLP:
-    def __init__(self, layers):
-        self.net = MLPNeuralNetwork(layers, activation=Sigmoid)
-        self.net.learning_rate = 0.2
+    def __init__(self, layers, adam=False):
+
+        self.net = MLPNeuralNetwork(layers, 0.001, activation=Sigmoid, adam)
+
+
 
     def train(self, dataset, epochs=10, batch_size=32):
         #if dataset.shape != (1, self.net.layerSizes[0]):
@@ -56,6 +58,11 @@ class MLP:
 
             # Debug
             lossArray.append(averageLoss / batch_size)
+
+            # Optimizations
+            if adam:
+                Mht = Mt / (1 / self.bias1 ** epoch)
+            #    self.net.learning_rate /= math.sqrt(epoch)
 
         # Debug
         plt.plot(range(epochs), lossArray)
