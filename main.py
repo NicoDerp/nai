@@ -34,7 +34,7 @@ for i in range(5):
             biggest = n
             biggest_i = i
 
-    print(f"Predicted {biggest_i} with probability of {biggest}")
+    print(f"Predicted {biggest_i} with probability of {biggest}\n")
 
 #model.net.expectedOutput = [1]
 #print(model.net.calculateLoss())

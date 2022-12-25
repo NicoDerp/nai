@@ -65,6 +65,8 @@ class XOR(Dataset):
 
         self.off = 0
 
+        self.size = 4
+
     # Nothing to download
     def _download(self):
         pass
@@ -79,6 +81,8 @@ class MNIST(Dataset):
     FILES = ["t10k-images-idx3-ubyte", "t10k-labels-idx1-ubyte", "train-images-idx3-ubyte", "train-labels-idx1-ubyte"]
 
     def __init__(self, path, download=False, force=False):
+
+        self.size = 60000
 
         self.path = path
         self.shape = (0, 0)
@@ -156,7 +160,7 @@ class MNIST(Dataset):
         samples = []
 
         with open(os.path.join(self.RAW_DIR, "train-images-idx3-ubyte"), "rb") as dataFile, open(os.path.join(self.RAW_DIR, "train-labels-idx1-ubyte"), "rb") as labelFile:
-            n = random_exclusion(0, 60000, self.used)
+            n = random_exclusion(0, self.size, self.used)
             self.used.add(n)
 
             #print("nth", n)

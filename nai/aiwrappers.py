@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 class MLP:
     def __init__(self, layers, adam=False):
 
-        self.net = MLPNeuralNetwork(layers, 0.001, activation=Sigmoid, adam=adam)
+        self.net = MLPNeuralNetwork(layers, 0.2, activation=Sigmoid, adam=adam)
 
     def train(self, dataset, epochs=10, batch_size=32):
         #if dataset.shape != (1, self.net.layerSizes[0]):
@@ -18,6 +18,9 @@ class MLP:
 
         #dataset.useSet(SetTypes.Train)
 
+        nBatches = math.ceil(dataset.size / batch_size)
+        print(f"Doing {nBatches} batches per epoch")
+
         for epoch in range(epochs):
             print(f"Epoch {epoch+1}/{epochs}")
 
@@ -25,37 +28,38 @@ class MLP:
 
             dataset.shuffle()
 
-            errorSum = [zero(self.net.layerSizes[i + 1]) for i in range(self.net.nLayers - 1)]
+            for batch in range(nBatches):
+                errorSum = [zero(self.net.layerSizes[i + 1]) for i in range(self.net.nLayers - 1)]
 
-            samples = dataset.retrieveBatch(batch_size)
-            #print([(sample.data, sample.output) for sample in samples])
+                samples = dataset.retrieveBatch(batch_size)
+                #print([(sample.data, sample.output) for sample in samples])
 
-            for sample in samples:
-                #print("\nUsing data:", sample.data)
-                self.net.layers[0] = sample.data
-                self.net.forwardPropagate()
-                #print("Got answ:", self.net.layers[-1])
+                for sample in samples:
+                    #print("\nUsing data:", sample.data)
+                    self.net.layers[0] = sample.data
+                    self.net.forwardPropagate()
+                    #print("Got answ:", self.net.layers[-1])
 
-                loss = self.net.calculateLoss()
-                averageLoss += loss
-                #print(f"Loss: {loss:.10f}")
+                    self.net.expectedOutput = sample.output
+                    errs = self.net.calcErrors()
 
-                self.net.expectedOutput = sample.output
-                errs = self.net.calcErrors()
+                    loss = self.net.calculateLoss()
+                    averageLoss += loss
+                    #print(f"Loss: {loss:.10f}")
 
-                # Add new deltas to sum
+                    # Add new deltas to sum
+                    for layer in range(self.net.nLayers - 1):
+                        for i in range(len(errs[layer])):
+                            errorSum[layer][i] += errs[layer][i]
+
                 for layer in range(self.net.nLayers - 1):
-                    for i in range(len(errs[layer])):
-                        errorSum[layer][i] += errs[layer][i]
+                    for i in range(len(errorSum[layer])):
+                        errorSum[layer][i] /= batch_size
 
-            for layer in range(self.net.nLayers - 1):
-                for i in range(len(errorSum[layer])):
-                    errorSum[layer][i] /= batch_size
+                self.net.backPropagate(errorSum)
 
-            self.net.backPropagate(errorSum)
-
-            # Debug
-            lossArray.append(averageLoss / batch_size)
+                # Debug
+                lossArray.append(averageLoss / batch_size)
 
             # Optimizations
             #if self.adam:
