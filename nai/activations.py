@@ -1,6 +1,7 @@
 
 import math
 from numba import njit
+import numpy as np
 
 class ActivationFunction:
     name = "Base ActivationFunction"

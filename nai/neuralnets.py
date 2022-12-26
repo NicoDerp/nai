@@ -30,7 +30,7 @@ class MLPNeuralNetwork:
         self.nLayers = len(layerSizes)
         self.layerSizes = layerSizes
         self.layers = np.array([np.zeros(layerSizes[i]) for i in range(self.nLayers)], dtype=object)
-        self.zLayers = np.array([np.zeros(layerSizes[i]) for i in range(1, self.nLayers)], dtype=object) # The same as layers but every neuron is before activation
+        self.zLayers = np.array([np.zeros(layerSizes[i + 1]) for i in range(self.nLayers - 1)], dtype=object) # The same as layers but every neuron is before activation
 
         self.weights = np.array([np.random.uniform(size=layerSizes[i] * layerSizes[i + 1]) for i in range(self.nLayers - 1)], dtype=object)
         #self.weights = np.array([np.zeros(layerSizes[i] * layerSizes[i + 1]) for i in range(self.nLayers - 1)])
@@ -72,34 +72,48 @@ class MLPNeuralNetwork:
                 #layers[i + 1][j] = s
 
     def calcErrors(self):
-        lastErrors = np.array([np.zeros(self.layerSizes[i + 1]) for i in range(self.nLayers - 1)], dtype=object)
+        lastErrors = np.array([np.zeros(self.layerSizes[i + 1]) for i in range(self.nLayers - 1)])
+
+        dk = self.layers[-1] - self.expectedOutput
+        errs = np.multiply(dk, self.activation.df(self.zLayers[-1]))
+        lastErrors[-1] = errs
 
         # Loop through each neuron in the output layer and calculate errors
-        for k, n in enumerate(self.layers[-1]):
-            dk = n - self.expectedOutput[k]
-            err = dk * self.activation.df(self.zLayers[-1][k])
-            lastErrors[-1][k] = err
+        #for k, n in enumerate(self.layers[-1]):
+        #    dk = n - self.expectedOutput[k]
+        #    err = dk * self.activation.df(self.zLayers[-1][k])
+        #    lastErrors[-1][k] = err
+
+        # 1
+        # Only hidden layers. Input is given and output is calculated above
+        # Calculate error for this layer and use weights to the right.
+        for i in range(self.nLayers - 2, 0, -1):
+            wL1 = self.weights[i].reshape((self.layerSizes[i], self.layerSizes[i + 1]))
+            eL1 = lastErrors[i]
+            a = wL1.dot(eL1)
+            eL = np.multiply(a, self.activation.df(self.zLayers[i - 1]))
+            lastErrors[i - 1] = eL
 
         # Loop through each layer except output layer backwards
-        for i in range(self.nLayers - 1, 0, -1):
-            layer = self.layers[i]
+        #for i in range(self.nLayers - 1, 0, -1):
+        #    layer = self.layers[i]
 
             # Loop through the neurons in the layer to the left
-            for j in range(len(self.layers[i - 1])):
-                werrSum = 0
+            #for j in range(len(self.layers[i - 1])):
+                #werrSum = 0
                 # Loop through the neurons in this layer
-                for k in range(len(layer)):
-                    kw = j * len(self.layers[i]) + k # left*sizeof(right) + right
+                #for k in range(len(layer)):
+                    #kw = j * len(self.layers[i]) + k # left*sizeof(right) + right
 
                     # Get the weight between input (j) and output (k) (w k,j)
-                    w = self.weights[i - 1][kw]
-                    e = lastErrors[i - 1][k] # Get the error from neuron in this layer
-                    werrSum += w * e
+                    #w = self.weights[i - 1][kw]
+                    #e = lastErrors[i - 1][k] # Get the error from neuron in this layer
+                    #werrSum += w * e
 
                 # Calculated error for neuron on the layer to the left
-                if i > 1:
-                    err = werrSum * self.activation.df(self.zLayers[i - 2][j])
-                    lastErrors[i - 2][j] = err
+                #if i > 1:
+                    #err = werrSum * self.activation.df(self.zLayers[i - 2][j])
+                    #lastErrors[i - 2][j] = err
 
         return lastErrors
 

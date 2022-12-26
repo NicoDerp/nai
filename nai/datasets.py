@@ -14,7 +14,7 @@ import requests
 import random
 
 import matplotlib.pyplot as plt
-import numpy
+import numpy as np
 
 class Dataset:
     def _initVars(self):
@@ -174,7 +174,7 @@ class MNIST(Dataset):
             label = int.from_bytes(labelFile.read(1), "big")
 
             # This is going from one-hot encoded to categorial
-            output = [0] * 10
+            output = np.zeros(10)
             output[label] = 1
 
             #data = numpy.array(data)
@@ -207,7 +207,7 @@ class MNIST(Dataset):
             label = int.from_bytes(f.read(1), "big")
 
             # This is going from one-hot encoded to categorial
-            output = [0] * 10
+            output = np.zeros(10)
             output[label] = 1
 
         #data = numpy.array(data)
