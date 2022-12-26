@@ -3,33 +3,36 @@
 import numba
 import math
 import time
+import numpy as np
 
-@numba.njit(fastmath=True)
-def doSomething(a, b):
-    s = a/b
-    a = Test(5)
-    for i in range(a):
-        s *= math.e ** a.other(math.sqrt(i / a * b))
-    return s ** s
+@numba.njit
+def doSomething(a, c):
+    a[0] += c.f(a[1])
 
-class Test:
-    def __init__(self, n):
-        self.n = n
-    def other(self):
-        return otherThing(self.n)
+
+
+class MyClass:
+    def __init__(self):
+        pass
+
     @staticmethod
-    @numba.njit(fastmath=True)
-    def otherThing(n):
-        return n**2 + 2*n - 1
+    @numba.njit
+    def f(x):
+        return x**2
+
+
+a = np.array([1, 2, 3])
+print(f"a before: {a}")
 
 # Compilation + execution
 start = time.time()
-doSomething(50, 100)
+doSomething(a, MyClass)
 end = time.time()
 print(f"Elapsed (with compilation) = {end-start:.10f}")
+print(f"a after: {a}")
 
-start = time.time()
-doSomething(50, 100)
-end = time.time()
-print(f"Elapsed (without compilation) = {end-start:.10f}")
+#start = time.time()
+#doSomething(a)
+#end = time.time()
+#print(f"Elapsed (without compilation) = {end-start:.10f}")
 

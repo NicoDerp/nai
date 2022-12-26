@@ -8,29 +8,26 @@ from numba import njit
 from nai.activations import *
 
 
-def _forwardPropagate(nLayers, layerSizes, layers, weights, biases, zLayers, activation):
+def _forwardPropagate(layers, weights, biases, zLayers, activation):
     # Loop through input and hidden layers
-    for i in range(nLayers - 1):
+    for i in range(len(layers) - 1):
         #print(f"Layer {i}")
-        #layer1 = self.layers[i]
-        #layer2 = self.layers[i + 1]
-        #weights = self.weights[i]
-        #biases = self.biases[i]
 
         # Loop through the neurons on the second layer
-        for j in range(layerSizes[i + 1]):
+        for j in range(len(layers[i + 1])):
             s = 0
 
             # Loop through neurons on the first layer
-            for k, n in enumerate(layers[i]):
-                kw = k * layerSizes[i + 1] + j
+            for k in range(len(layers[i])):
+                n = layers[i][k]
+                kw = k * len(layers[i + 1]) + j
                 w = weights[i][kw]
                 s += w * n
 
             s += biases[i][j]
             zLayers[i][j] = s
 
-            s = activation.f(s)
+            s = activation(s)
             layers[i + 1][j] = s
 
 
@@ -68,6 +65,7 @@ class MLPNeuralNetwork:
         print("Using activation function:", activation.name)
 
     def forwardPropagate(self):
+        _forwardPropagate(self.layers, self.weights, self.biases, self.zLayers, self.activation.f)
 
     def calcErrors(self):
         lastErrors = np.array([np.zeros(self.layerSizes[i + 1]) for i in range(self.nLayers - 1)], dtype=object)

@@ -82,7 +82,7 @@ class MLP:
         #print(lossArray)
 
         # Debug
-        plt.plot(range(epochs), lossArray)
+        plt.plot(range(epochs * nBatches), lossArray)
         plt.grid()
         plt.show()
 
