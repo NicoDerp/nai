@@ -8,38 +8,6 @@ from numba import njit
 from nai.activations import *
 
 
-@njit
-def _forwardPropagate(layers, weights, biases, zLayers, activation):
-    for i in range(len(layers) - 1):
-        wL = weights[i].reshape([len(layers[i]), len(layers[i + 1])]).transpose()
-        zL = wL.dot(layers[i])
-        zL += biases[i]
-        zLayers[i] = zL.copy()
-        zL = activation(zL)
-        layers[i + 1] = zL
-
-    # Loop through input and hidden layers
-    #for i in range(len(layers) - 1):
-        #print(f"Layer {i}")
-
-        # Loop through the neurons on the second layer
-        #for j in range(len(layers[i + 1])):
-            #s = 0
-
-            # Loop through neurons on the first layer
-            #for k in range(len(layers[i])):
-                #n = layers[i][k]
-                #kw = k * len(layers[i + 1]) + j
-                #w = weights[i][kw]
-                #s += w * n
-
-            #s += biases[i][j]
-            #zLayers[i][j] = s
-
-            #s = activation(s)
-            #layers[i + 1][j] = s
-
-
 class MLPNeuralNetwork:
     def __init__(self, layerSizes, learning_rate, activation=Sigmoid, adam=False):
 
@@ -74,7 +42,34 @@ class MLPNeuralNetwork:
         print("Using activation function:", activation.name)
 
     def forwardPropagate(self):
-        _forwardPropagate(self.layers, self.weights, self.biases, self.zLayers, self.activation.f)
+        for i in range(self.nLayers - 1):
+            wL = self.weights[i].reshape((self.layerSizes[i], self.layerSizes[i + 1])).transpose()
+            zL = wL.dot(self.layers[i])
+            zL += self.biases[i]
+            self.zLayers[i] = zL.copy()
+            zL = self.activation.f(zL)
+            self.layers[i + 1] = zL
+
+        # Loop through input and hidden layers
+        #for i in range(len(layers) - 1):
+            #print(f"Layer {i}")
+
+            # Loop through the neurons on the second layer
+            #for j in range(len(layers[i + 1])):
+                #s = 0
+
+                # Loop through neurons on the first layer
+                #for k in range(len(layers[i])):
+                    #n = layers[i][k]
+                    #kw = k * len(layers[i + 1]) + j
+                    #w = weights[i][kw]
+                    #s += w * n
+
+                #s += biases[i][j]
+                #zLayers[i][j] = s
+
+                #s = activation(s)
+                #layers[i + 1][j] = s
 
     def calcErrors(self):
         lastErrors = np.array([np.zeros(self.layerSizes[i + 1]) for i in range(self.nLayers - 1)], dtype=object)
