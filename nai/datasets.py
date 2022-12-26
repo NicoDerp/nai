@@ -82,7 +82,8 @@ class MNIST(Dataset):
 
     def __init__(self, path, download=False, force=False):
 
-        self.size = 60000
+        #self.size = 60000
+        self.size = 10
 
         self.path = path
         self.shape = (0, 0)

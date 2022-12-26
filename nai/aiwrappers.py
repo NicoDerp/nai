@@ -13,11 +13,13 @@ def _doBatch(net, dataset, batch_size):
     errorSum = np.array([np.zeros(net.layerSizes[i + 1]) for i in range(net.nLayers - 1)])
 
     averageLoss = 0
+    averageAcc = 0
 
     samples = dataset.retrieveBatch(batch_size)
     #print([(sample.data, sample.output) for sample in samples])
 
     for sample in samples:
+        print("Sample")
         #print("\nUsing data:", sample.data)
         net.layers[0] = sample.data
         net.forwardPropagate()
@@ -28,6 +30,16 @@ def _doBatch(net, dataset, batch_size):
 
         loss = net.calculateLoss()
         averageLoss += loss
+
+        biggest = 0
+        biggest_i = 0
+        for i, n in enumerate(net.layers[-1]):
+            if n > biggest:
+                biggest = n
+                biggest_i = i
+
+        averageAcc += 1 if biggest_i == list(sample.output).index(1) else 0
+
         #print(f"Loss: {loss:.10f}")
 
         # Add new deltas to sum
@@ -46,7 +58,7 @@ def _doBatch(net, dataset, batch_size):
 
     net.backPropagate(errorSum)
 
-    return averageLoss / len(samples)
+    return averageLoss/len(samples), averageAcc/len(samples)
 
 
 class MLP:
@@ -55,6 +67,9 @@ class MLP:
         self.net = MLPNeuralNetwork(layers, 0.2, activation=Sigmoid, adam=adam)
 
     def train(self, dataset, epochs=10, batch_size=32):
+        if batch_size > dataset.size:
+            raise ValueError(f"Batch size is greater than dataset size")
+
         #if dataset.shape != (1, self.net.layerSizes[0]):
         #    raise ValueError(f"Dataset shape {dataset.shape} does not match the neural network's input shape (1, {self.net.layerSizes[0]}).")
 
@@ -63,7 +78,8 @@ class MLP:
         nBatches = math.ceil(dataset.size / batch_size)
         print(f"Doing {nBatches} batches per epoch")
 
-        lossArray: List[float] = np.empty(epochs*nBatches)
+        lossArray = np.empty(epochs*nBatches)
+        accuracyArray = np.empty(epochs*nBatches)
 
         batch = 0
         for epoch in range(epochs):
@@ -72,8 +88,9 @@ class MLP:
             dataset.shuffle()
 
             for batch in range(nBatches):
-                average_loss = _doBatch(self.net, dataset, batch_size)
+                average_loss, average_acc = _doBatch(self.net, dataset, batch_size)
                 lossArray[batch] = average_loss
+                accuracyArray[batch] = average_acc
                 batch += 1
 
             # Debug
@@ -87,8 +104,10 @@ class MLP:
         #print(lossArray)
 
         # Debug
-        plt.plot(range(epochs * nBatches), lossArray)
+        plt.plot(range(epochs * nBatches), lossArray, label="Loss")
+        plt.plot(range(epochs * nBatches), accuracyArray, label="Accuracy")
         plt.grid()
+        plt.legend()
         plt.show()
 
     def test(self, dataset):
