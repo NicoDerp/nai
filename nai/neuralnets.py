@@ -23,7 +23,7 @@ class MLPNeuralNetwork:
             self.epsilon = 10**-8
 
         if len(layerSizes) < 3:
-            raise ValueError("A multilayer perceptron must consist of an input layer, atleast one hidden layer and an ouuput layer.")
+            raise ValueError("A multilayer perceptron must consist of an input layer, atleast one hidden layer and an output layer.")
 
         self.expectedOutput = np.zeros(layerSizes[-1])
 
@@ -43,8 +43,12 @@ class MLPNeuralNetwork:
 
     def forwardPropagate(self):
         for i in range(self.nLayers - 1):
-            wL = self.weights[i].reshape((self.layerSizes[i], self.layerSizes[i + 1])).transpose()
+            wL = self.weights[i].reshape((self.layerSizes[i + 1], self.layerSizes[i]))
+            #print(self.weights[i].reshape((self.layerSizes[i], self.layerSizes[i + 1])))
+            print(wL)
+            print(self.layers[i], '\n')
             zL = wL.dot(self.layers[i])
+            #print(zL)
             zL += self.biases[i]
             self.zLayers[i] = zL.copy()
             zL = self.activation.f(zL)
