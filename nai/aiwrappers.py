@@ -10,7 +10,7 @@ from numba import njit
 
 #@njit(fastmath=True)
 def _doBatch(net, dataset, batch_size):
-    errorSum = np.array([np.zeros(net.layerSizes[i + 1]) for i in range(net.nLayers - 1)])
+    averageError = np.array([np.zeros(net.layerSizes[i + 1]) for i in range(net.nLayers - 1)])
 
     averageLoss = 0
     averageAcc = 0
@@ -26,7 +26,8 @@ def _doBatch(net, dataset, batch_size):
         #print("Got answ:", self.net.layers[-1])
 
         net.expectedOutput = sample.output
-        errs = net.calcErrors()
+        E = net.backPropagateError()
+        averageError = np.add(averageError, E)
 
         loss = net.calculateLoss()
         averageLoss += loss
@@ -48,15 +49,13 @@ def _doBatch(net, dataset, batch_size):
         #        errorSum[layer][i] += errs[layer][i]
         #print("e", errorSum)
         #print(errs)
-        errorSum = np.add(errorSum, errs)
 
     #for layer in range(net.nLayers - 1):
     #    for i in range(len(errorSum[layer])):
     #        errorSum[layer][i] /= batch_size
 
-    errorSum /= len(samples)
-
-    net.backPropagate(errorSum)
+    averageError /= len(samples)
+    net.gradientDescent(averageError)
 
     return averageLoss/len(samples), averageAcc/len(samples)
 
