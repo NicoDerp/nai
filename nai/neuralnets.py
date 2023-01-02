@@ -32,6 +32,8 @@ class MLPNeuralNetwork:
         self.layers = np.array([np.zeros(layerSizes[i]) for i in range(self.nLayers)], dtype=object)
         self.zLayers = np.array([np.zeros(layerSizes[i + 1]) for i in range(self.nLayers - 1)], dtype=object) # The same as layers but every neuron is before activation
 
+        self.errors = np.array([np.zeros(self.layerSizes[i + 1]) for i in range(self.nLayers - 1)], dtype=object)
+
         self.weights = np.array([np.random.uniform(size=layerSizes[i] * layerSizes[i + 1]) for i in range(self.nLayers - 1)], dtype=object)
         #self.weights = np.array([np.zeros(layerSizes[i] * layerSizes[i + 1]) for i in range(self.nLayers - 1)])
         self.biases = np.array([np.random.uniform(size=layerSizes[i + 1]) for i in range(self.nLayers - 1)], dtype=object)
@@ -72,11 +74,10 @@ class MLPNeuralNetwork:
                 #layers[i + 1][j] = s
 
     def backPropagateError(self):
-        lastErrors = np.array([np.zeros(self.layerSizes[i + 1]) for i in range(self.nLayers - 1)])
 
         dk = self.layers[-1] - self.expectedOutput
         errs = np.multiply(dk, self.activation.df(self.zLayers[-1]))
-        lastErrors[-1] = errs
+        self.errors[-1] = errs
 
         # Loop through each neuron in the output layer and calculate errors
         #for k, n in enumerate(self.layers[-1]):
@@ -89,9 +90,9 @@ class MLPNeuralNetwork:
         # Calculate error for this layer and use weights to the right.
         for i in range(self.nLayers - 2, 0, -1):
             wL1 = self.weights[i].reshape((self.layerSizes[i], self.layerSizes[i + 1]))
-            eL1 = lastErrors[i]
+            eL1 = self.errors[i]
             eL = np.multiply(wL1.dot(eL1), self.activation.df(self.zLayers[i - 1]))
-            lastErrors[i - 1] = eL
+            self.errors[i - 1] = eL
 
         # Loop through each layer except output layer backwards
         #for i in range(self.nLayers - 1, 0, -1):
@@ -114,19 +115,22 @@ class MLPNeuralNetwork:
                     #err = werrSum * self.activation.df(self.zLayers[i - 2][j])
                     #lastErrors[i - 2][j] = err
 
-        return lastErrors
-
-    def gradientDescent(self, errorList):
+    def gradientDescent(self):
         # 1 - 0
         for i in range(self.nLayers - 2, -1, -1):
-            eL = errorList[i] # Error for this layer
+            eL = self.errors[i] # Error for this layer
+            #aL1 = self.layers[i+1]
             aL1 = self.layers[i] # L-1
+            aL1 = np.copy(aL1.reshape((-1, 1))) # 1D tranpose (1, 5) -> (5, 1)
 
-            dw = -self.learning_rate * eL * aL1
-            db = -self.learning_rate * eL
+            #dw = self.learning_rate * eL * aL1
+            dw = self.learning_rate * eL * aL1
+            db = self.learning_rate * eL
 
-            weights[i] += dw
-            biases[i] += db
+            dw = dw.ravel() # Reshape from 2D to 1D
+
+            self.weights[i] -= dw
+            self.biases[i] -= db
 
         # Loop through each layer except output layer backwards
         #for i in range(self.nLayers - 1, 0, -1):
