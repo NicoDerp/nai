@@ -19,7 +19,7 @@ def _doBatch(net, dataset, batch_size):
     #print([(sample.data, sample.output) for sample in samples])
 
     for sample in samples:
-        print("Sample")
+        #print("Sample")
         #print("\nUsing data:", sample.data)
         net.layers[0] = sample.data
         net.forwardPropagate()

@@ -3,10 +3,20 @@ import random
 import math
 import numpy as np
 
-from numba import njit
+import numba
 
 from nai.activations import *
 
+
+@numba.njit
+def _calculateLoss(outputLayer, expectedOutput):
+    E = 0
+    for i in range(len(outputLayer)):
+        #print(f"i {i}, n {n}")
+        E += (expectedOutput[i] - outputLayer[i]) ** 2
+        #print(f"E {E}")
+
+    return E / len(outputLayer)
 
 class MLPNeuralNetwork:
     def __init__(self, layerSizes, learning_rate, activation=Sigmoid, adam=False):
@@ -34,7 +44,7 @@ class MLPNeuralNetwork:
 
         self.errors = np.array([np.zeros(self.layerSizes[i + 1]) for i in range(self.nLayers - 1)], dtype=object)
 
-        self.weights = np.array([np.random.uniform(size=layerSizes[i] * layerSizes[i + 1]) for i in range(self.nLayers - 1)], dtype=object)
+        self.weights = np.array([np.random.uniform(size=(layerSizes[i + 1], layerSizes[i])) for i in range(self.nLayers - 1)], dtype=object)
         #self.weights = np.array([np.zeros(layerSizes[i] * layerSizes[i + 1]) for i in range(self.nLayers - 1)])
         self.biases = np.array([np.random.uniform(size=layerSizes[i + 1]) for i in range(self.nLayers - 1)], dtype=object)
         #self.biases = np.array([np.zeros(layerSizes[i + 1]) for i in range(self.nLayers - 1)])
@@ -44,9 +54,12 @@ class MLPNeuralNetwork:
         print("Using activation function:", activation.name)
 
     def forwardPropagate(self):
+        # 0 - (len(self.nLayers) - 1)
         for i in range(self.nLayers - 1):
-            wL = self.weights[i].reshape((self.layerSizes[i + 1], self.layerSizes[i]))
-            zL = wL.dot(self.layers[i])
+            #wL = self.weights[i].reshape((self.layerSizes[i + 1], self.layerSizes[i]))
+            wL = self.weights[i]
+            aL = self.layers[i]
+            zL = wL.dot(aL)
             zL += self.biases[i]
             self.zLayers[i] = zL.copy()
             zL = self.activation.f(zL)
@@ -89,7 +102,8 @@ class MLPNeuralNetwork:
         # Only hidden layers. Input is given and output is calculated above
         # Calculate error for this layer and use weights to the right.
         for i in range(self.nLayers - 2, 0, -1):
-            wL1 = self.weights[i].reshape((self.layerSizes[i], self.layerSizes[i + 1]))
+            #wL1 = self.weights[i].reshape((self.layerSizes[i], self.layerSizes[i + 1]))
+            wL1 = self.weights[i].transpose()
             eL1 = self.errors[i]
             eL = np.multiply(wL1.dot(eL1), self.activation.df(self.zLayers[i - 1]))
             self.errors[i - 1] = eL
@@ -120,16 +134,16 @@ class MLPNeuralNetwork:
         for i in range(self.nLayers - 2, -1, -1):
             eL = self.errors[i] # Error for this layer
             #aL1 = self.layers[i+1]
-            aL1 = self.layers[i] # L-1
-            aL1 = np.copy(aL1.reshape((-1, 1))) # 1D tranpose (1, 5) -> (5, 1)
+            aL1 = np.copy(self.layers[i]) # L-1
+            aL1 = aL1.reshape((-1, 1)) # 1D tranpose (1, 5) -> (5, 1)
 
             #dw = self.learning_rate * eL * aL1
             dw = self.learning_rate * eL * aL1
             db = self.learning_rate * eL
 
-            dw = dw.ravel() # Reshape from 2D to 1D
+            #dw = dw.ravel() # Reshape from 2D to 1D
 
-            self.weights[i] -= dw
+            self.weights[i] -= dw.transpose()
             self.biases[i] -= db
 
         # Loop through each layer except output layer backwards
@@ -155,13 +169,7 @@ class MLPNeuralNetwork:
                     #self.biases[i - 1][k] += db
 
     def calculateLoss(self):
-        E = 0
-        for i, n in enumerate(self.layers[-1]):
-            #print(f"i {i}, n {n}")
-            E += (n - self.expectedOutput[i]) ** 2
-            #print(f"E {E}")
-
-        return E / len(self.layers[-1])
+        return _calculateLoss(self.layers[-1], self.expectedOutput)
 
     def __str__(self):
         string = "Input          "

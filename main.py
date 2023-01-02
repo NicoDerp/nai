@@ -9,7 +9,7 @@ dataset = datasets.MNIST("datasets", download=True)
 model = aiwrappers.MLP([784, 32, 10])
 #model = aiwrappers.MLP([2, 3, 1])
 
-model.train(dataset, epochs=10, batch_size=10)
+model.train(dataset, epochs=1, batch_size=32)
 
 #model.test(dataset)
 
@@ -20,13 +20,12 @@ dataset.shuffle()
 for i in range(5):
 
     sample = dataset.retrieveSample()
-    print(sample.output)
+    print("Expected", sample.output)
 
     model.net.layers[0] = sample.data
 
-    model.net.layers[0] = [1, 0]
     model.net.forwardPropagate()
-    print(model.net.layers[-1])
+    print("Got", model.net.layers[-1])
 
     biggest = 0
     biggest_i = 0

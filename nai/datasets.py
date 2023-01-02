@@ -82,8 +82,7 @@ class MNIST(Dataset):
 
     def __init__(self, path, download=False, force=False):
 
-        #self.size = 60000
-        self.size = 10
+        self.size = 60000
 
         self.path = path
         self.shape = (0, 0)
@@ -161,38 +160,39 @@ class MNIST(Dataset):
         samples = []
 
         with open(os.path.join(self.RAW_DIR, "train-images-idx3-ubyte"), "rb") as dataFile, open(os.path.join(self.RAW_DIR, "train-labels-idx1-ubyte"), "rb") as labelFile:
-            n = random_exclusion(0, self.size, self.used)
-            self.used.add(n)
+            for i in range(batch_size):
+                n = random_exclusion(0, self.size, self.used)
+                self.used.add(n)
 
-            #print("nth", n)
+                #print("nth", n)
 
-            # self.current == SetTypes.Train
-            dataFile.seek(n * 28 * 28 + 16)
-            data = [int.from_bytes(dataFile.read(1), "big") for i in range(28 * 28)]
-            data = list(map(lambda a:a/255, data))
+                # self.current == SetTypes.Train
+                dataFile.seek(n * 28 * 28 + 16)
+                data = [int.from_bytes(dataFile.read(1), "big") for i in range(28 * 28)]
+                data = list(map(lambda a:a/255, data))
 
-            labelFile.seek(n * 1 + 8)
-            label = int.from_bytes(labelFile.read(1), "big")
+                labelFile.seek(n * 1 + 8)
+                label = int.from_bytes(labelFile.read(1), "big")
 
-            # This is going from one-hot encoded to categorial
-            output = np.zeros(10)
-            output[label] = 1
+                # This is going from one-hot encoded to categorial
+                output = np.zeros(10)
+                output[label] = 1
 
-            #data = numpy.array(data)
-            #twod = numpy.reshape(data, (28, 28))
-            
-            #print(label)
-            #print(output)
+                #data = numpy.array(data)
+                #twod = numpy.reshape(data, (28, 28))
+                
+                #print(label)
+                #print(output)
 
-            #plt.matshow(twod)
-            #plt.show()
+                #plt.matshow(twod)
+                #plt.show()
 
-            samples.append(Sample(data, output))
+                samples.append(Sample(data, output))
 
         return samples
 
     def retrieveSample(self):
-        n = random_exclusion(0, 60000, self.used)
+        n = random_exclusion(0, self.size, self.used)
         self.used.add(n)
 
         #print("nth", n)
