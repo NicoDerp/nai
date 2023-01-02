@@ -76,6 +76,10 @@ class XOR(Dataset):
 
         return [self.examples[(self.off + i) % 4] for i in range(batch_size)]
 
+    def retrieveSample(self):
+        self.off = (self.off + 1) % 4
+
+        return self.examples[self.off]
 
 class MNIST(Dataset):
     FILES = ["t10k-images-idx3-ubyte", "t10k-labels-idx1-ubyte", "train-images-idx3-ubyte", "train-labels-idx1-ubyte"]

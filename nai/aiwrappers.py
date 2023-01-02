@@ -39,7 +39,7 @@ def _doBatch(net, dataset, batch_size):
                 biggest = n
                 biggest_i = i
 
-        averageAcc += 1 if biggest_i == list(sample.output).index(1) else 0
+        #averageAcc += 1 if biggest_i == list(sample.output).index(1) else 0
 
         #print(f"Loss: {loss:.10f}")
 
@@ -83,7 +83,6 @@ class MLP:
         lossArray = np.empty(epochs*nBatches)
         accuracyArray = np.empty(epochs*nBatches)
 
-        batch = 0
         for epoch in range(epochs):
             print(f"Epoch {epoch+1}/{epochs}")
 
@@ -93,7 +92,6 @@ class MLP:
                 average_loss, average_acc = _doBatch(self.net, dataset, batch_size)
                 lossArray[batch] = average_loss
                 accuracyArray[batch] = average_acc
-                batch += 1
 
             # Debug
             #lossArray.append(averageLoss / batch_size)
@@ -103,11 +101,11 @@ class MLP:
             #    Mht = Mt / (1 / self.bias1 ** epoch)
             #    self.net.learning_rate /= math.sqrt(epoch)
 
-        #print(lossArray)
+        print(lossArray)
 
         # Debug
         plt.plot(range(epochs * nBatches), lossArray, label="Loss")
-        plt.plot(range(epochs * nBatches), accuracyArray, label="Accuracy")
+        #plt.plot(range(epochs * nBatches), accuracyArray, label="Accuracy")
         plt.grid()
         plt.legend()
         plt.show()

@@ -3,13 +3,13 @@
 from nai import *
 import numpy as np
 
-dataset = datasets.MNIST("datasets", download=True)
-#dataset = datasets.XOR()
+#dataset = datasets.MNIST("datasets", download=True)
+dataset = datasets.XOR()
 
-model = aiwrappers.MLP([784, 32, 10])
-#model = aiwrappers.MLP([2, 3, 1])
+#model = aiwrappers.MLP([784, 32, 10])
+model = aiwrappers.MLP([2, 3, 1])
 
-model.train(dataset, epochs=1, batch_size=32)
+model.train(dataset, epochs=50, batch_size=1)
 
 #model.test(dataset)
 
