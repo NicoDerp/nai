@@ -80,21 +80,28 @@ class MLP:
         nBatches = math.ceil(dataset.size / batch_size)
         print(f"Doing {nBatches} batches per epoch")
 
-        lossArray = np.empty(epochs*nBatches)
-        accuracyArray = np.empty(epochs*nBatches)
+        #lossArray = np.empty(epochs*nBatches)
+        lossArray = np.empty(epochs)
+        #accuracyArray = np.empty(epochs*nBatches)
 
-        batchCount = 0
+        #batchCount = 0
 
         for epoch in range(epochs):
             print(f"Epoch {epoch+1}/{epochs}")
 
             dataset.shuffle()
 
+            averageLoss = 0
+
             for batch in range(nBatches):
-                average_loss, average_acc = _doBatch(self.net, dataset, batch_size)
-                lossArray[batchCount] = average_loss
-                accuracyArray[batchCount] = average_acc
-                batchCount += 1
+                loss, acc = _doBatch(self.net, dataset, batch_size)
+
+                averageLoss += loss
+
+                #accuracyArray[batchCount] = acc
+                #batchCount += 1
+
+            lossArray[epoch] = averageLoss
 
             # Debug
             #lossArray.append(averageLoss / batch_size)
@@ -107,7 +114,8 @@ class MLP:
         print(lossArray)
 
         # Debug
-        plt.plot(range(epochs * nBatches), lossArray, label="Loss")
+        #plt.plot(range(epochs * nBatches), lossArray, label="Loss")
+        plt.plot(range(epochs), lossArray, label="Loss")
         #plt.plot(range(epochs * nBatches), accuracyArray, label="Accuracy")
         plt.grid()
         plt.legend()
