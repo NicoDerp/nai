@@ -20,7 +20,17 @@ def _calculateLoss(outputLayer, expectedOutput):
     return E / len(outputLayer)
 
 class MLPNeuralNetwork:
-    def __init__(self, layerSizes, learning_rate, activation=Sigmoid, adam=False):
+    def __init__(self, layerSizes, learning_rate, activations=[], adam=False):
+
+        if len(layerSizes) < 3:
+            raise ValueError("A multilayer perceptron must consist of an input layer, atleast one hidden layer and an output layer.")
+
+        if not isinstance(activations):
+            self.activations = activations.pop() * len(layerSizes)
+        elif len(layerSizes) != len(activations):
+            raise ValueError("Activations must be the same length as layerSizes.")
+        else:
+            self.activations = activations
 
         self.learning_rate = learning_rate
 
@@ -32,9 +42,6 @@ class MLPNeuralNetwork:
             self.beta1 = 0.9
             self.beta2 = 0.999
             self.epsilon = 10**-8
-
-        if len(layerSizes) < 3:
-            raise ValueError("A multilayer perceptron must consist of an input layer, atleast one hidden layer and an output layer.")
 
         self.expectedOutput = np.zeros(layerSizes[-1])
 
@@ -49,10 +56,6 @@ class MLPNeuralNetwork:
         #self.weights = np.array([np.zeros(layerSizes[i] * layerSizes[i + 1]) for i in range(self.nLayers - 1)])
         self.biases = [np.random.uniform(size=layerSizes[i + 1]) for i in range(self.nLayers - 1)]
         #self.biases = np.array([np.zeros(layerSizes[i + 1]) for i in range(self.nLayers - 1)])
-
-        self.activation = activation
-
-        print("Using activation function:", activation.name)
 
     def forwardPropagate(self):
         # 0 - (len(self.nLayers) - 1)
