@@ -7,6 +7,8 @@ from urllib.request import urlretrieve
 from urllib.request import urlopen
 from zipfile import ZipFile
 
+import numba
+
 from tqdm import tqdm
 
 import requests
@@ -38,12 +40,8 @@ class Sample:
         self.data = data
         self.output = output
 
-class SetTypes:
-    Train = 0
-    Test = 1
-
-
 # Credit to TeaCoast
+@numba.njit(fastmath=True)
 def random_exclusion(start, stop, excluded):
     """Function for getting a random number with some numbers excluded"""
     #excluded = set(excluded) # if input is set then not needed

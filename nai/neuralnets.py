@@ -8,9 +8,9 @@ import numba
 from nai.activations import *
 
 
-@numba.njit
+@numba.njit("f8(f8[:], f8[:])", fastmath=True)
 def _calculateLoss(outputLayer, expectedOutput):
-    E = 0
+    E = 0.0
     for i in range(len(outputLayer)):
         #print(f"i {i}, n {n}")
         E += (expectedOutput[i] - outputLayer[i]) ** 2
@@ -39,14 +39,14 @@ class MLPNeuralNetwork:
 
         self.nLayers = len(layerSizes)
         self.layerSizes = layerSizes
-        self.layers = np.array([np.zeros(layerSizes[i]) for i in range(self.nLayers)], dtype=object)
-        self.zLayers = np.array([np.zeros(layerSizes[i + 1]) for i in range(self.nLayers - 1)], dtype=object) # The same as layers but every neuron is before activation
+        self.layers = [np.zeros(layerSizes[i], dtype=np.float64) for i in range(self.nLayers)]
+        self.zLayers = [np.zeros(layerSizes[i + 1], dtype=np.float64) for i in range(self.nLayers - 1)] # The same as layers but every neuron is before activation
 
-        self.errors = np.array([np.zeros(self.layerSizes[i + 1]) for i in range(self.nLayers - 1)], dtype=object)
+        self.errors = [np.zeros(self.layerSizes[i + 1]) for i in range(self.nLayers - 1)]
 
-        self.weights = np.array([np.random.uniform(size=(layerSizes[i + 1], layerSizes[i])) for i in range(self.nLayers - 1)], dtype=object)
+        self.weights = [np.random.uniform(size=(layerSizes[i], layerSizes[i + 1])) for i in range(self.nLayers - 1)]
         #self.weights = np.array([np.zeros(layerSizes[i] * layerSizes[i + 1]) for i in range(self.nLayers - 1)])
-        self.biases = np.array([np.random.uniform(size=layerSizes[i + 1]) for i in range(self.nLayers - 1)], dtype=object)
+        self.biases = [np.random.uniform(size=layerSizes[i + 1]) for i in range(self.nLayers - 1)]
         #self.biases = np.array([np.zeros(layerSizes[i + 1]) for i in range(self.nLayers - 1)])
 
         self.activation = activation
