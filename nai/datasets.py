@@ -223,7 +223,7 @@ class MNIST(Dataset):
         return Sample(data, output)
 
     def isDownloaded(self):
-        if not all([os.path.isfile(os.path.join(self.RAW_DIR, fn))] for fn in MNIST.FILES):
+        if not all([os.path.isfile(os.path.join(self.RAW_DIR, fn)) for fn in MNIST.FILES]):
             return False
 
         with open(os.path.join(self.RAW_DIR, "train-images-idx3-ubyte"), "rb") as f:
