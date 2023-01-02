@@ -4,12 +4,12 @@ from nai import *
 import numpy as np
 
 #dataset = datasets.MNIST("datasets", download=True)
-#dataset = datasets.XOR()
+dataset = datasets.XOR()
 
 #model = aiwrappers.MLP([784, 32, 10])
-#model = aiwrappers.MLP([2, 2, 1])
+model = aiwrappers.MLP([2, 3, 1])
 
-#model.train(dataset, epochs=4000, batch_size=4)
+model.train(dataset, epochs=1000, batch_size=1)
 
 #model.test(dataset)
 
@@ -39,22 +39,22 @@ import numpy as np
 #model.net.expectedOutput = [1]
 #print(model.net.calculateLoss())
 
-#exit()
+exit()
 
 # o - o
 #   x
 # o - o
 
-net = MLPNeuralNetwork([2, 3, 2], learning_rate=0.1, activation=activations.ActivationFunction)
-net.layers[0] = np.array([1.0, 4.0], dtype=np.float64)
-net.weights = np.array([[0.5, 1], [2, 3], [3, 2], [1, 0.5]])
-net.biases = np.array([[0.1, 0.2], [0.3, 0.4]])
+net = MLPNeuralNetwork([2, 2, 2], learning_rate=0.1, activation=activations.TanH)
+net.layers[0] = np.array([1.0, 4.0])
+#net.weights = [np.array([[0.5, 1.0], [2.0, 3.0]]), np.array([[3.0, 2.0], [1.0, 0.5]])]
+#net.biases = np.array([[0.1, 0.2], [0.3, 0.4]])
 
 net.expectedOutput = np.array([0.8, 0.5])
 
 print("Trying to get:", net.expectedOutput)
 
-max_epochs = 10000
+max_epochs = 1000
 epoch = 0
 
 #for epoch in range(100):

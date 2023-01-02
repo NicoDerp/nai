@@ -45,11 +45,11 @@ class TanH(ActivationFunction):
 
     @njit(fastmath=True)
     def f(x):
-        return math.tanh(x)
+        return np.tanh(x)
 
     @njit(fastmath=True)
     def df(x):
-        return 1 - math.tanh(x) ** 2
+        return 1 - np.tanh(x) ** 2
 
 class Softmax(ActivationFunction):
     name = "Softmax"

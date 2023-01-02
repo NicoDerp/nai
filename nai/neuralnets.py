@@ -8,7 +8,8 @@ import numba
 from nai.activations import *
 
 
-@numba.njit("f8(f8[:], f8[:])", fastmath=True)
+#@numba.njit("f8(f8[:], f8[:])", fastmath=True)
+@numba.njit(fastmath=True)
 def _calculateLoss(outputLayer, expectedOutput):
     E = 0.0
     for i in range(len(outputLayer)):
@@ -44,7 +45,7 @@ class MLPNeuralNetwork:
 
         self.errors = [np.zeros(self.layerSizes[i + 1]) for i in range(self.nLayers - 1)]
 
-        self.weights = [np.random.uniform(size=(layerSizes[i], layerSizes[i + 1])) for i in range(self.nLayers - 1)]
+        self.weights = [np.random.uniform(size=(layerSizes[i + 1], layerSizes[i])) for i in range(self.nLayers - 1)]
         #self.weights = np.array([np.zeros(layerSizes[i] * layerSizes[i + 1]) for i in range(self.nLayers - 1)])
         self.biases = [np.random.uniform(size=layerSizes[i + 1]) for i in range(self.nLayers - 1)]
         #self.biases = np.array([np.zeros(layerSizes[i + 1]) for i in range(self.nLayers - 1)])
