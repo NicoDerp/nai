@@ -25,10 +25,13 @@ class MLPNeuralNetwork:
         if len(layerSizes) < 3:
             raise ValueError("A multilayer perceptron must consist of an input layer, atleast one hidden layer and an output layer.")
 
-        if not isinstance(activations):
-            self.activations = activations.pop() * len(layerSizes)
-        elif len(layerSizes) != len(activations):
-            raise ValueError("Activations must be the same length as layerSizes.")
+        if not isinstance(activations, list):
+            if issubclass(activations, ActivationFunction):
+                self.activations = [activations] * (len(layerSizes) - 1)
+            else:
+                raise ValueError("Activations needs to be either an ActivationFunction or a list of ActivationFunctions.")
+        elif len(layerSizes) - 1 != len(activations):
+            raise ValueError("Activations must be 1 less than the amount of layers.")
         else:
             self.activations = activations
 
@@ -52,10 +55,13 @@ class MLPNeuralNetwork:
 
         self.errors = [np.zeros(self.layerSizes[i + 1]) for i in range(self.nLayers - 1)]
 
+        # Random initialized
         self.weights = [np.random.uniform(size=(layerSizes[i + 1], layerSizes[i])) for i in range(self.nLayers - 1)]
-        #self.weights = np.array([np.zeros(layerSizes[i] * layerSizes[i + 1]) for i in range(self.nLayers - 1)])
         self.biases = [np.random.uniform(size=layerSizes[i + 1]) for i in range(self.nLayers - 1)]
-        #self.biases = np.array([np.zeros(layerSizes[i + 1]) for i in range(self.nLayers - 1)])
+
+        # Zero initialized
+        #self.weights = [np.zeros(shape=(layerSizes[i + 1], layerSizes[i])) for i in range(self.nLayers - 1)]
+        #self.biases = [np.zeros(shape=layerSizes[i + 1]) for i in range(self.nLayers - 1)]
 
     def forwardPropagate(self):
         # 0 - (len(self.nLayers) - 1)
@@ -66,7 +72,7 @@ class MLPNeuralNetwork:
             zL = wL.dot(aL)
             zL += self.biases[i]
             self.zLayers[i] = zL.copy()
-            zL = self.activation.f(zL)
+            zL = self.activations[i].f(zL)
             self.layers[i + 1] = zL
 
         # Loop through input and hidden layers
@@ -93,7 +99,7 @@ class MLPNeuralNetwork:
     def backPropagateError(self):
 
         dk = self.layers[-1] - self.expectedOutput
-        errs = np.multiply(dk, self.activation.df(self.zLayers[-1]))
+        errs = np.multiply(dk, self.activations[-1].df(self.zLayers[-1]))
         self.errors[-1] = errs
 
         # Loop through each neuron in the output layer and calculate errors
@@ -109,9 +115,7 @@ class MLPNeuralNetwork:
             #wL1 = self.weights[i].reshape((self.layerSizes[i], self.layerSizes[i + 1]))
             wL1 = self.weights[i].transpose()
             eL1 = self.errors[i]
-            a = wL1.dot(eL1)
-            b = self.activation.df(self.zLayers[i - 1])
-            eL = np.multiply(wL1.dot(eL1), self.activation.df(self.zLayers[i - 1]))
+            eL = np.multiply(wL1.dot(eL1), self.activations[i].df(self.zLayers[i - 1]))
             self.errors[i - 1] = eL
 
         # Loop through each layer except output layer backwards

@@ -66,7 +66,7 @@ def _doBatch(net, dataset, batch_size):
 class MLP:
     def __init__(self, layers, activations, adam=False):
 
-        self.net = MLPNeuralNetwork(layers, 0.001, activations=activations, adam=adam)
+        self.net = MLPNeuralNetwork(layers, 0.1, activations=activations, adam=adam)
 
     def train(self, dataset, epochs=10, batch_size=32):
         if batch_size > dataset.size:

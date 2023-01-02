@@ -9,23 +9,25 @@ dataset = datasets.XOR()
 #model = aiwrappers.MLP([784, 32, 10])
 model = aiwrappers.MLP([2, 3, 1], ReLU)
 
-model.train(dataset, epochs=1000, batch_size=1)
+model.train(dataset, epochs=10000, batch_size=1)
 
 #model.test(dataset)
 
-#print("\n\nTest:")
+print("\n\nTest:")
 
-#dataset.shuffle()
+dataset.shuffle()
 
-#for i in range(5):
+np.set_printoptions(suppress=True)
 
-    #sample = dataset.retrieveSample()
-    #print("Expected", sample.output)
+for i in range(5):
 
-    #model.net.layers[0] = sample.data
+    sample = dataset.retrieveSample()
+    print("Expected", sample.output)
 
-    #model.net.forwardPropagate()
-    #print("Got", model.net.layers[-1])
+    model.net.layers[0] = sample.data
+
+    model.net.forwardPropagate()
+    print(f"Got {model.net.layers[-1]}")
 
     #biggest = 0
     #biggest_i = 0
