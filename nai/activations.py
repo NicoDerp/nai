@@ -33,10 +33,11 @@ class ReLU(ActivationFunction):
 
     @njit(fastmath=True)
     def f(x):
-        return max(0, x)
+        return np.maximum(0.0, x)
 
+    @njit(fastmath=True)
     def df(x):
-        return 0 if x <= 0 else 1
+        return np.greater(x, 0.0)
 
 
 class TanH(ActivationFunction):

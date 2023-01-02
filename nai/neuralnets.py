@@ -105,6 +105,8 @@ class MLPNeuralNetwork:
             #wL1 = self.weights[i].reshape((self.layerSizes[i], self.layerSizes[i + 1]))
             wL1 = self.weights[i].transpose()
             eL1 = self.errors[i]
+            a = wL1.dot(eL1)
+            b = self.activation.df(self.zLayers[i - 1])
             eL = np.multiply(wL1.dot(eL1), self.activation.df(self.zLayers[i - 1]))
             self.errors[i - 1] = eL
 

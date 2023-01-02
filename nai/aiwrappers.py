@@ -66,7 +66,7 @@ def _doBatch(net, dataset, batch_size):
 class MLP:
     def __init__(self, layers, adam=False):
 
-        self.net = MLPNeuralNetwork(layers, 0.2, activation=Sigmoid, adam=adam)
+        self.net = MLPNeuralNetwork(layers, 0.001, activation=ReLU, adam=adam)
 
     def train(self, dataset, epochs=10, batch_size=32):
         if batch_size > dataset.size:
@@ -83,6 +83,8 @@ class MLP:
         lossArray = np.empty(epochs*nBatches)
         accuracyArray = np.empty(epochs*nBatches)
 
+        batchCount = 0
+
         for epoch in range(epochs):
             print(f"Epoch {epoch+1}/{epochs}")
 
@@ -90,8 +92,9 @@ class MLP:
 
             for batch in range(nBatches):
                 average_loss, average_acc = _doBatch(self.net, dataset, batch_size)
-                lossArray[batch] = average_loss
-                accuracyArray[batch] = average_acc
+                lossArray[batchCount] = average_loss
+                accuracyArray[batchCount] = average_acc
+                batchCount += 1
 
             # Debug
             #lossArray.append(averageLoss / batch_size)
