@@ -21,11 +21,12 @@ class Sigmoid(ActivationFunction):
         #print(f"{x:.10f}")
         #if -x >= 710:
         #    return 0
-        return 1 / (1 + math.e**(-x))
+        return 1 / (1 + np.exp(-x))
 
     @njit(fastmath=True)
     def df(x):
-        return (math.e**x) / ((math.e**2 + 1) ** 2)
+        a = 1 / (1 + np.exp(x))
+        return a * (1 - a)
 
 
 class ReLU(ActivationFunction):
