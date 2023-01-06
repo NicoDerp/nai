@@ -2,7 +2,7 @@
 import math
 import numpy as np
 
-from helper import *
+from nai.helper import *
 
 
 class ActivationFunction:
