@@ -7,8 +7,6 @@ from urllib.request import urlretrieve
 from urllib.request import urlopen
 from zipfile import ZipFile
 
-import numba
-
 from tqdm import tqdm
 
 import requests
@@ -17,6 +15,8 @@ import random
 
 import matplotlib.pyplot as plt
 import numpy as np
+
+from nai.helper import *
 
 class Dataset:
     def _initVars(self):
@@ -39,18 +39,6 @@ class Sample:
     def __init__(self, data, output):
         self.data = data
         self.output = output
-
-# Credit to TeaCoast
-@numba.njit(fastmath=True)
-def random_exclusion(start, stop, excluded):
-    """Function for getting a random number with some numbers excluded"""
-    #excluded = set(excluded) # if input is set then not needed
-    value = random.randint(start, stop - len(excluded)) # Or you could use randrange
-    for exclusion in tuple(excluded):
-        if value < exclusion:
-            break
-        value += 1
-    return value
 
 
 class XOR(Dataset):

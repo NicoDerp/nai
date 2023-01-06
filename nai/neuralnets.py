@@ -3,13 +3,12 @@ import random
 import math
 import numpy as np
 
-import numba
-
 from nai.activations import *
+from nai.helper import *
 
 
 #@numba.njit("f8(f8[:], f8[:])", fastmath=True)
-@numba.njit(fastmath=True)
+@nnjit
 def _calculateLoss(outputLayer, expectedOutput):
     E = 0.0
     for i in range(len(outputLayer)):

@@ -6,8 +6,6 @@ import matplotlib.pyplot as plt
 
 import numpy as np
 
-from numba import njit
-
 #@njit(fastmath=True)
 def _doBatch(net, dataset, batch_size):
     averageError = np.array([np.zeros(net.layerSizes[i + 1]) for i in range(net.nLayers - 1)], dtype=object)

@@ -1,7 +1,9 @@
 
 import math
-from numba import njit
 import numpy as np
+
+from helper import *
+
 
 class ActivationFunction:
     name = "Base ActivationFunction"
@@ -16,14 +18,14 @@ class ActivationFunction:
 class Sigmoid(ActivationFunction):
     name = "Sigmoid"
 
-    @njit(fastmath=True)
+    @nnjit
     def f(x):
         #print(f"{x:.10f}")
         #if -x >= 710:
         #    return 0
         return 1 / (1 + np.exp(-x))
 
-    @njit(fastmath=True)
+    @nnjit
     def df(x):
         a = 1 / (1 + np.exp(x))
         return a * (1 - a)
@@ -32,11 +34,11 @@ class Sigmoid(ActivationFunction):
 class ReLU(ActivationFunction):
     name = "ReLU"
 
-    @njit(fastmath=True)
+    @nnjit
     def f(x):
         return np.maximum(0.0, x)
 
-    @njit(fastmath=True)
+    @nnjit
     def df(x):
         return np.greater(x, 0.0)
 
@@ -44,18 +46,18 @@ class ReLU(ActivationFunction):
 class TanH(ActivationFunction):
     name = "TanH"
 
-    @njit(fastmath=True)
+    @nnjit
     def f(x):
         return np.tanh(x)
 
-    @njit(fastmath=True)
+    @nnjit
     def df(x):
         return 1 - np.tanh(x) ** 2
 
 class Softmax(ActivationFunction):
     name = "Softmax"
 
-    @njit(fastmath=True)
+    @nnjit
     def f(x):
         e_x = math.e ** (x - np.max(x))
         return e_x / e_x.sum(x)
