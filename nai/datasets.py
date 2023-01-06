@@ -14,7 +14,9 @@ import requests
 import random
 
 import matplotlib.pyplot as plt
-import numpy
+import numpy as np
+
+from nai.helper import *
 
 class Dataset:
     def _initVars(self):
@@ -38,22 +40,6 @@ class Sample:
         self.data = data
         self.output = output
 
-class SetTypes:
-    Train = 0
-    Test = 1
-
-
-# Credit to TeaCoast
-def random_exclusion(start, stop, excluded):
-    """Function for getting a random number with some numbers excluded"""
-    #excluded = set(excluded) # if input is set then not needed
-    value = random.randint(start, stop - len(excluded)) # Or you could use randrange
-    for exclusion in tuple(excluded):
-        if value < exclusion:
-            break
-        value += 1
-    return value
-
 
 class XOR(Dataset):
     def __init__(self, *args, **kwargs):
@@ -76,6 +62,10 @@ class XOR(Dataset):
 
         return [self.examples[(self.off + i) % 4] for i in range(batch_size)]
 
+    def retrieveSample(self):
+        self.off = (self.off + 1) % 4
+
+        return self.examples[self.off]
 
 class MNIST(Dataset):
     FILES = ["t10k-images-idx3-ubyte", "t10k-labels-idx1-ubyte", "train-images-idx3-ubyte", "train-labels-idx1-ubyte"]
@@ -122,7 +112,10 @@ class MNIST(Dataset):
         resp = requests.get(MNIST_ZIP_URL, stream=True)
         total_size = int(resp.headers.get('content-length', 0))
 
-        progress_bar = tqdm(total=total_size, ascii="░▒█", unit='iB', unit_scale=True)
+        num_bars = math.ceil(total_size / BLOCK_SIZE)
+
+        #progress_bar = tqdm(total=total_size, ascii="░▒█", unit='iB', unit_scale=True)
+        progress_bar = ProgressBar(maxval=num_bars).start()
 
         dots = 0
         counter = 0
@@ -130,12 +123,13 @@ class MNIST(Dataset):
         with open(MNIST_ZIP, 'r+b') as f:
             for data in resp.iter_content(BLOCK_SIZE):
                 counter += 1
-                if counter >= BLOCK_SIZE:
-                    counter = 0
-                    dots = (dots + 1) % 4
-                    progress_bar.set_description("Downloading" + "." * dots + " " * (3 - dots))
+                #if counter >= BLOCK_SIZE:
+                #    counter = 0
+                #    dots = (dots + 1) % 4
+                #    progress_bar.set_description("Downloading" + "." * dots + " " * (3 - dots))
 
-                progress_bar.update(len(data))
+                #progress_bar.update(len(data))
+                progress_bar.update(counter)
                 f.write(data)
 
         with urlopen("file://" + self.MNIST_ZIP) as z:
@@ -160,38 +154,39 @@ class MNIST(Dataset):
         samples = []
 
         with open(os.path.join(self.RAW_DIR, "train-images-idx3-ubyte"), "rb") as dataFile, open(os.path.join(self.RAW_DIR, "train-labels-idx1-ubyte"), "rb") as labelFile:
-            n = random_exclusion(0, self.size, self.used)
-            self.used.add(n)
+            for i in range(batch_size):
+                n = random_exclusion(0, self.size, self.used)
+                self.used.add(n)
 
-            #print("nth", n)
+                #print("nth", n)
 
-            # self.current == SetTypes.Train
-            dataFile.seek(n * 28 * 28 + 16)
-            data = [int.from_bytes(dataFile.read(1), "big") for i in range(28 * 28)]
-            data = list(map(lambda a:a/255, data))
+                # self.current == SetTypes.Train
+                dataFile.seek(n * 28 * 28 + 16)
+                data = [int.from_bytes(dataFile.read(1), "big") for i in range(28 * 28)]
+                data = list(map(lambda a:a/255, data))
 
-            labelFile.seek(n * 1 + 8)
-            label = int.from_bytes(labelFile.read(1), "big")
+                labelFile.seek(n * 1 + 8)
+                label = int.from_bytes(labelFile.read(1), "big")
 
-            # This is going from one-hot encoded to categorial
-            output = [0] * 10
-            output[label] = 1
+                # This is going from one-hot encoded to categorial
+                output = np.zeros(10)
+                output[label] = 1
 
-            #data = numpy.array(data)
-            #twod = numpy.reshape(data, (28, 28))
-            
-            #print(label)
-            #print(output)
+                #data = numpy.array(data)
+                #twod = numpy.reshape(data, (28, 28))
+                
+                #print(label)
+                #print(output)
 
-            #plt.matshow(twod)
-            #plt.show()
+                #plt.matshow(twod)
+                #plt.show()
 
-            samples.append(Sample(data, output))
+                samples.append(Sample(data, output))
 
         return samples
 
     def retrieveSample(self):
-        n = random_exclusion(0, 60000, self.used)
+        n = random_exclusion(0, self.size, self.used)
         self.used.add(n)
 
         #print("nth", n)
@@ -207,7 +202,7 @@ class MNIST(Dataset):
             label = int.from_bytes(f.read(1), "big")
 
             # This is going from one-hot encoded to categorial
-            output = [0] * 10
+            output = np.zeros(10)
             output[label] = 1
 
         #data = numpy.array(data)
@@ -222,7 +217,7 @@ class MNIST(Dataset):
         return Sample(data, output)
 
     def isDownloaded(self):
-        if not all([os.path.isfile(os.path.join(self.RAW_DIR, fn))] for fn in MNIST.FILES):
+        if not all([os.path.isfile(os.path.join(self.RAW_DIR, fn)) for fn in MNIST.FILES]):
             return False
 
         with open(os.path.join(self.RAW_DIR, "train-images-idx3-ubyte"), "rb") as f:

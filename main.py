@@ -1,14 +1,16 @@
 #!/usr/bin/python3
 
 from nai import *
+import numpy as np
 
-dataset = datasets.MNIST("datasets", download=True)
-#dataset = datasets.XOR()
+#dataset = datasets.MNIST("datasets", download=True)
+dataset = datasets.XOR()
 
-model = aiwrappers.MLP([784, 32, 10])
-#model = aiwrappers.MLP([2, 2, 1])
+#model = aiwrappers.MLP([784, 32, 10])
+model = aiwrappers.MLP([2, 3, 1], ReLU)
 
-model.train(dataset, epochs=50, batch_size=32)
+#model.train(dataset, epochs=2, batch_size=32)
+model.train(dataset, epochs=4000, batch_size=1)
 
 #model.test(dataset)
 
@@ -16,16 +18,19 @@ print("\n\nTest:")
 
 dataset.shuffle()
 
+np.set_printoptions(suppress=True)
+
 for i in range(5):
 
     sample = dataset.retrieveSample()
-    print(sample.output)
+    print("Expected", sample.output)
 
     model.net.layers[0] = sample.data
 
-    #model.net.layers[0] = [1, 0]
     model.net.forwardPropagate()
-    #print(model.net.layers[-1])
+    print(f"Got {model.net.layers[-1]}")
+
+    continue
 
     biggest = 0
     biggest_i = 0
@@ -36,19 +41,23 @@ for i in range(5):
 
     print(f"Predicted {biggest_i} with probability of {biggest}\n")
 
-#model.net.expectedOutput = [1]
-#print(model.net.calculateLoss())
 
 exit()
 
-net = neuralnet.MLPNeuralNetwork([2, 3, 2], activation=activations.ReLU)
-net.layers[0] = [0.1, 0.3]
-net.expectedOutput = [0.8, 0.5]
-net.learning_rate = 0.05
+# o - o
+#   x
+# o - o
+
+net = MLPNeuralNetwork([2, 2, 2], learning_rate=0.1, activation=activations.TanH)
+net.layers[0] = np.array([1.0, 4.0])
+#net.weights = [np.array([[0.5, 1.0], [2.0, 3.0]]), np.array([[3.0, 2.0], [1.0, 0.5]])]
+#net.biases = np.array([[0.1, 0.2], [0.3, 0.4]])
+
+net.expectedOutput = np.array([0.8, 0.5])
 
 print("Trying to get:", net.expectedOutput)
 
-max_epochs = 10000
+max_epochs = 1000
 epoch = 0
 
 #for epoch in range(100):
@@ -60,7 +69,9 @@ while epoch < max_epochs:
     print(f"Epoch {epoch+1}/{max_epochs}")
 
     net.forwardPropagate()
-    net.backPropagate()
+    net.backPropagateError()
+    net.gradientDescent()
+
     print(f"\n{net}\n")
     print(f"Loss {loss:.20f}")
 
