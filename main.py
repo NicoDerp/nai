@@ -9,6 +9,7 @@ dataset = datasets.XOR()
 #model = aiwrappers.MLP([784, 32, 10])
 model = aiwrappers.MLP([2, 3, 1], ReLU)
 
+#model.train(dataset, epochs=2, batch_size=32)
 model.train(dataset, epochs=4000, batch_size=1)
 
 #model.test(dataset)
@@ -29,17 +30,17 @@ for i in range(5):
     model.net.forwardPropagate()
     print(f"Got {model.net.layers[-1]}")
 
-    #biggest = 0
-    #biggest_i = 0
-    #for i, n in enumerate(model.net.layers[-1]):
-        #if n > biggest:
-            #biggest = n
-            #biggest_i = i
+    continue
 
-    #print(f"Predicted {biggest_i} with probability of {biggest}\n")
+    biggest = 0
+    biggest_i = 0
+    for i, n in enumerate(model.net.layers[-1]):
+        if n > biggest:
+            biggest = n
+            biggest_i = i
 
-#model.net.expectedOutput = [1]
-#print(model.net.calculateLoss())
+    print(f"Predicted {biggest_i} with probability of {biggest}\n")
+
 
 exit()
 

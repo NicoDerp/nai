@@ -112,7 +112,10 @@ class MNIST(Dataset):
         resp = requests.get(MNIST_ZIP_URL, stream=True)
         total_size = int(resp.headers.get('content-length', 0))
 
-        progress_bar = tqdm(total=total_size, ascii="░▒█", unit='iB', unit_scale=True)
+        num_bars = math.ceil(total_size / BLOCK_SIZE)
+
+        #progress_bar = tqdm(total=total_size, ascii="░▒█", unit='iB', unit_scale=True)
+        progress_bar = ProgressBar(maxval=num_bars).start()
 
         dots = 0
         counter = 0
@@ -120,12 +123,13 @@ class MNIST(Dataset):
         with open(MNIST_ZIP, 'r+b') as f:
             for data in resp.iter_content(BLOCK_SIZE):
                 counter += 1
-                if counter >= BLOCK_SIZE:
-                    counter = 0
-                    dots = (dots + 1) % 4
-                    progress_bar.set_description("Downloading" + "." * dots + " " * (3 - dots))
+                #if counter >= BLOCK_SIZE:
+                #    counter = 0
+                #    dots = (dots + 1) % 4
+                #    progress_bar.set_description("Downloading" + "." * dots + " " * (3 - dots))
 
-                progress_bar.update(len(data))
+                #progress_bar.update(len(data))
+                progress_bar.update(counter)
                 f.write(data)
 
         with urlopen("file://" + self.MNIST_ZIP) as z:

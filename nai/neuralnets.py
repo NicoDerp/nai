@@ -98,6 +98,7 @@ class MLPNeuralNetwork:
     def backPropagateError(self):
 
         dk = self.layers[-1] - self.expectedOutput
+        # TODO zLayers or layers??? Try both
         errs = np.multiply(dk, self.activations[-1].df(self.zLayers[-1]))
         self.errors[-1] = errs
 
