@@ -3,14 +3,14 @@
 from nai import *
 import numpy as np
 
-dataset = datasets.MNIST("datasets", download=True)
-#dataset = datasets.XOR()
+#dataset = datasets.MNIST("datasets", download=True)
+dataset = datasets.XOR()
 
-model = aiwrappers.MLP([784, 32, 10], ReLU)
-#model = aiwrappers.MLP([2, 3, 1], ReLU)
+#model = aiwrappers.MLP([784, 32, 10], ReLU)
+model = aiwrappers.MLP([2, 3, 1], ReLU)
 
-model.train(dataset, epochs=2, batch_size=32)
-#model.train(dataset, epochs=4000, batch_size=1)
+#model.train(dataset, epochs=2, batch_size=32)
+model.train(dataset, epochs=4000, batch_size=1)
 
 #model.test(dataset)
 
@@ -30,7 +30,7 @@ for i in range(5):
     model.net.forwardPropagate()
     print(f"Got {model.net.layers[-1]}")
 
-    #continue
+    continue
 
     biggest = 0
     biggest_i = 0

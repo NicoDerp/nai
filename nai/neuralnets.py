@@ -70,7 +70,7 @@ class MLPNeuralNetwork:
             aL = self.layers[i]
             zL = wL.dot(aL)
             zL += self.biases[i]
-            self.zLayers[i] = zL.copy()
+            #self.zLayers[i] = zL.copy()
             zL = self.activations[i].f(zL)
             self.layers[i + 1] = zL
 
@@ -99,7 +99,8 @@ class MLPNeuralNetwork:
 
         dk = self.layers[-1] - self.expectedOutput
         # TODO zLayers or layers??? Try both
-        errs = np.multiply(dk, self.activations[-1].df(self.zLayers[-1]))
+        #errs = np.multiply(dk, self.activations[-1].df(self.zLayers[-1]))
+        errs = np.multiply(dk, self.activations[-1].df(self.layers[-1]))
         self.errors[-1] = errs
 
         # Loop through each neuron in the output layer and calculate errors
@@ -115,7 +116,8 @@ class MLPNeuralNetwork:
             #wL1 = self.weights[i].reshape((self.layerSizes[i], self.layerSizes[i + 1]))
             wL1 = self.weights[i].transpose()
             eL1 = self.errors[i]
-            eL = np.multiply(wL1.dot(eL1), self.activations[i].df(self.zLayers[i - 1]))
+            #eL = np.multiply(wL1.dot(eL1), self.activations[i].df(self.zLayers[i - 1]))
+            eL = np.multiply(wL1.dot(eL1), self.activations[i].df(self.layers[i]))
             self.errors[i - 1] = eL
 
         # Loop through each layer except output layer backwards
