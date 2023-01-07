@@ -78,7 +78,7 @@ class MNIST(Dataset):
         self.shape = (0, 0)
 
         self.current = None
-        self.used = set()
+        self.used = []
 
         # Directories for saving the data => adapt to your needs
         self.DATA_DIR = os.path.join(os.getcwd(), self.path)
@@ -148,15 +148,15 @@ class MNIST(Dataset):
         self.current = s
 
     def shuffle(self):
-        self.used = set()
+        self.used = []
 
     def retrieveBatch(self, batch_size):
         samples = []
 
         with open(os.path.join(self.RAW_DIR, "train-images-idx3-ubyte"), "rb") as dataFile, open(os.path.join(self.RAW_DIR, "train-labels-idx1-ubyte"), "rb") as labelFile:
             for i in range(batch_size):
-                n = random_exclusion(0, self.size, self.used)
-                self.used.add(n)
+                n = random_exclusion(0, self.size, np.array(self.used))
+                self.used.append(n)
 
                 #print("nth", n)
 
@@ -186,8 +186,8 @@ class MNIST(Dataset):
         return samples
 
     def retrieveSample(self):
-        n = random_exclusion(0, self.size, self.used)
-        self.used.add(n)
+        n = random_exclusion(0, self.size, np.array(self.used))
+        self.used.append(n)
 
         #print("nth", n)
 

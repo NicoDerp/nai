@@ -16,7 +16,7 @@ def _calculateLoss(outputLayer, expectedOutput):
         E += (expectedOutput[i] - outputLayer[i]) ** 2
         #print(f"E {E}")
 
-    return E / len(outputLayer)
+    return E / 2
 
 class MLPNeuralNetwork:
     def __init__(self, layerSizes, learning_rate, activations=[], adam=False):
