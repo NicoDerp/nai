@@ -3,23 +3,13 @@ import random
 import math
 import numpy as np
 
+from nai.lossfunctions import *
 from nai.activations import *
 from nai.helper import *
 
 
-#@numba.njit("f8(f8[:], f8[:])", fastmath=True)
-@nnjit
-def _calculateLoss(outputLayer, expectedOutput):
-    E = 0.0
-    for i in range(len(outputLayer)):
-        #print(f"i {i}, n {n}")
-        E += (expectedOutput[i] - outputLayer[i]) ** 2
-        #print(f"E {E}")
-
-    return E / 2
-
 class MLPNeuralNetwork:
-    def __init__(self, layerSizes, learning_rate, activations=[], adam=False):
+    def __init__(self, layerSizes, learning_rate, lossfunction, activations=[], adam=False):
 
         if len(layerSizes) < 3:
             raise ValueError("A multilayer perceptron must consist of an input layer, atleast one hidden layer and an output layer.")
@@ -35,6 +25,7 @@ class MLPNeuralNetwork:
             self.activations = activations
 
         self.learning_rate = learning_rate
+        self.lossfunction = lossfunction
 
         self.adam = adam
 
@@ -70,7 +61,7 @@ class MLPNeuralNetwork:
             aL = self.layers[i]
             zL = wL.dot(aL)
             zL += self.biases[i]
-            #self.zLayers[i] = zL.copy()
+            self.zLayers[i] = zL.copy()
             zL = self.activations[i].f(zL)
             self.layers[i + 1] = zL
 
@@ -97,10 +88,10 @@ class MLPNeuralNetwork:
 
     def backPropagateError(self):
 
-        dk = self.layers[-1] - self.expectedOutput
+        dk = self.lossfunction.df(self.layers[-1], self.expectedOutput)
         # TODO zLayers or layers??? Try both
-        #errs = np.multiply(dk, self.activations[-1].df(self.zLayers[-1]))
-        errs = np.multiply(dk, self.activations[-1].df(self.layers[-1]))
+        errs = np.multiply(dk, self.activations[-1].df(self.zLayers[-1]))
+        #errs = np.multiply(dk, self.activations[-1].df(self.layers[-1]))
         self.errors[-1] = errs
 
         # Loop through each neuron in the output layer and calculate errors
@@ -181,7 +172,7 @@ class MLPNeuralNetwork:
                     #self.biases[i - 1][k] += db
 
     def calculateLoss(self):
-        return _calculateLoss(self.layers[-1], self.expectedOutput)
+        return self.lossfunction.f(self.layers[-1], self.expectedOutput)
 
     def __str__(self):
         string = "Input          "

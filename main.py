@@ -7,7 +7,7 @@ import numpy as np
 dataset = datasets.XOR()
 
 #model = aiwrappers.MLP([784, 32, 10], ReLU)
-model = aiwrappers.MLP([2, 3, 1], ReLU)
+model = aiwrappers.MLP([2, 3, 1], MSE, ReLU)
 
 #model.train(dataset, epochs=2, batch_size=32)
 model.train(dataset, epochs=4000, batch_size=1)
@@ -32,14 +32,10 @@ for i in range(5):
 
     continue
 
-    biggest = 0
-    biggest_i = 0
-    for i, n in enumerate(model.net.layers[-1]):
-        if n > biggest:
-            biggest = n
-            biggest_i = i
+    pred = np.argmax(model.net.layers[-1])
+    prob = model.net.layers[biggest_i]
 
-    print(f"Predicted {biggest_i} with probability of {biggest}\n")
+    print(f"Predicted {pred} with probability of {prob}\n")
 
 
 exit()
