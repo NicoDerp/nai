@@ -15,6 +15,7 @@ import random
 
 import matplotlib.pyplot as plt
 import numpy as np
+import math
 
 from nai.helper import *
 
@@ -86,6 +87,9 @@ class MNIST(Dataset):
         self.RAW_DIR = os.path.join(self.MNIST_DIR, "raw")
         self.MNIST_ZIP = os.path.join(self.DATA_DIR, "mnist.zip")
 
+        # Make directories if they do not exist
+        os.makedirs(self.DATA_DIR, exist_ok=True)
+
         # Don't want to download and not downloaded
         if not download and not self.isDownloaded():
             raise ValueError(f"MNIST is not downloaded in '{path}' and download is set False.")
@@ -109,27 +113,27 @@ class MNIST(Dataset):
         # Download and unzip the data set files into the "path/MNIST/raw" directory
         raw_mnist = os.path.join(self.MNIST_DIR, "raw")
 
-        resp = requests.get(MNIST_ZIP_URL, stream=True)
+        resp = requests.get(MNIST_ZIP_URL, stream=True, verify=False)
         total_size = int(resp.headers.get('content-length', 0))
 
         num_bars = math.ceil(total_size / BLOCK_SIZE)
 
-        #progress_bar = tqdm(total=total_size, ascii="░▒█", unit='iB', unit_scale=True)
-        progress_bar = ProgressBar(maxval=num_bars).start()
+        progress_bar = tqdm(total=total_size, ascii="░▒█", unit='iB', unit_scale=True)
+        #progress_bar = ProgressBar(maxval=num_bars).start()
 
         dots = 0
         counter = 0
 
-        with open(MNIST_ZIP, 'r+b') as f:
+        with open(self.MNIST_ZIP, 'wb') as f:
             for data in resp.iter_content(BLOCK_SIZE):
                 counter += 1
-                #if counter >= BLOCK_SIZE:
-                #    counter = 0
-                #    dots = (dots + 1) % 4
-                #    progress_bar.set_description("Downloading" + "." * dots + " " * (3 - dots))
+                if counter >= BLOCK_SIZE:
+                    counter = 0
+                    dots = (dots + 1) % 4
+                    progress_bar.set_description("Downloading" + "." * dots + " " * (3 - dots))
 
-                #progress_bar.update(len(data))
-                progress_bar.update(counter)
+                progress_bar.update(len(data))
+                #progress_bar.update(counter)
                 f.write(data)
 
         with urlopen("file://" + self.MNIST_ZIP) as z:

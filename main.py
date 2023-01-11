@@ -3,14 +3,14 @@
 from nai import *
 import numpy as np
 
-#dataset = datasets.MNIST("datasets", download=True)
-dataset = datasets.XOR()
+dataset = datasets.MNIST("datasets", download=True)
+#dataset = datasets.XOR()
 
-#model = aiwrappers.MLP([784, 32, 10], ReLU)
-model = aiwrappers.MLP([2, 3, 1], MSE, ReLU)
+model = MLPNeuralNetwork([784, 32, 10], CrossEntropy, ReLU, 0.01)
+#model = aiwrappers.MLP([2, 3, 1], MSE, ReLU)
 
-#model.train(dataset, epochs=2, batch_size=32)
-model.train(dataset, epochs=4000, batch_size=1)
+model.train(dataset, epochs=2, batch_size=32)
+#model.train(dataset, epochs=4000, batch_size=1)
 
 #model.test(dataset)
 
@@ -20,7 +20,7 @@ dataset.shuffle()
 
 np.set_printoptions(suppress=True)
 
-for i in range(5):
+for i in range(10):
 
     sample = dataset.retrieveSample()
     print("Expected", sample.output)
@@ -30,10 +30,10 @@ for i in range(5):
     model.net.forwardPropagate()
     print(f"Got {model.net.layers[-1]}")
 
-    continue
+    #continue
 
     pred = np.argmax(model.net.layers[-1])
-    prob = model.net.layers[biggest_i]
+    prob = model.net.layers[pred]
 
     print(f"Predicted {pred} with probability of {prob}\n")
 
