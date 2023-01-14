@@ -6,17 +6,12 @@ import random
 numba_installed = importlib.find_loader("numba") is not None
 if numba_installed:
     import numba
+
     def nnjit(func):
-        jitted = numba.njit(func, fastmath=True)
-        #def wrapper(*args, **kwargs):
-        #    return jitted(*args, **kwargs)
-        #return wrapper
+        jitted = numba.njit(func, fastmath=True, cache=True)
         return jitted
 else:
     def nnjit(func):
-        #def wrapper(*args, **kwargs):
-        #    return func(*args, **kwargs)
-        #return wrapper
         return func
 
 

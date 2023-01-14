@@ -1,9 +1,7 @@
 
 import random
-import math
 import numpy as np
 
-from nai.lossfunctions import *
 from nai.activations import *
 from nai.helper import *
 
@@ -11,22 +9,11 @@ import matplotlib.pyplot as plt
 
 from numba.core import types
 
-@nnjit
-def _forwardPropagate(layers, weights, biases, zLayers, activations):
-    # 0 - (len(self.nLayers) - 1)
-    for i in range(len(layers) - 1):
-        #wL = self.weights[i].reshape((self.layerSizes[i + 1], self.layerSizes[i]))
-        wL = weights[i]
-        aL = layers[i]
-        zL = wL.dot(aL)
-        zL += biases[i]
-        zLayers[i] = zL
-        zL = activations[i].f(zL)
-        layers[i + 1] = zL
+import pickle
 
 
 class MLPNeuralNetwork:
-    def __init__(self, layerSizes, lossfunction, activations, learning_rate, adam=False):
+    def __init__(self, layerSizes, lossfunction, activations, learning_rate, dropout=0, adam=False):
 
         if len(layerSizes) < 3:
             raise ValueError("A multilayer perceptron must consist of an input layer, atleast one hidden layer and an output layer.")
@@ -41,14 +28,11 @@ class MLPNeuralNetwork:
         else:
             self.activations = activations
 
-        self.typedFList = numba.typed.List.empty_list(types.float64(types.float64).as_type())
-        self.typedDfList = numba.typed.List.empty_list(types.float64(types.float64).as_type())
-
-        [self.typedFList.append(a.f) for a in self.activations]
-        [self.typedDfList.append(a.df) for a in self.activations]
-
         self.learning_rate = learning_rate
         self.lossfunction = lossfunction
+
+        self.dropout = dropout
+        self.doDropout = False
 
         self.adam = adam
 
@@ -77,7 +61,16 @@ class MLPNeuralNetwork:
         #self.biases = [np.zeros(shape=layerSizes[i + 1]) for i in range(self.nLayers - 1)]
 
     def forwardPropagate(self):
-        _forwardPropagate(self.layers, self.weights, self.biases, self.zLayers, self.typedFList)
+        # 0 - (len(self.nLayers) - 1)
+        for i in range(self.nLayers - 1):
+            #wL = self.weights[i].reshape((self.layerSizes[i + 1], self.layerSizes[i]))
+            wL = self.weights[i]
+            aL = self.layers[i]
+            zL = wL.dot(aL)
+            zL += self.biases[i]
+            self.zLayers[i] = zL.copy()
+            zL = self.activations[i].f(zL)
+            self.layers[i + 1] = zL
 
     def backPropagateError(self):
 
@@ -125,13 +118,15 @@ class MLPNeuralNetwork:
         #if dataset.shape != (1, self.net.layerSizes[0]):
         #    raise ValueError(f"Dataset shape {dataset.shape} does not match the neural network's input shape (1, {self.net.layerSizes[0]}).")
 
+        self.doDropout = True
+
         #dataset.useSet(SetTypes.Train)
 
         nBatches = math.ceil(dataset.size / batch_size)
         print(f"Doing {nBatches} batches per epoch")
 
-        #lossArray = np.empty(epochs*nBatches)
-        lossArray = np.empty(epochs)
+        lossArray = np.empty(epochs * nBatches)
+        #lossArray = np.empty(epochs)
         #accuracyArray = np.empty(epochs*nBatches)
 
         #batchCount = 0
@@ -141,13 +136,11 @@ class MLPNeuralNetwork:
 
             dataset.shuffle()
 
-            averageLoss = 0
-
             for batch in range(nBatches):
                 averageError = np.array([np.zeros(self.layerSizes[i + 1]) for i in range(self.nLayers - 1)], dtype=object)
     
                 averageLoss = 0
-                averageAcc = 0
+                #averageAcc = 0
             
                 samples = dataset.retrieveBatch(batch_size)
                 #print([(sample.data, sample.output) for sample in samples])
@@ -161,13 +154,13 @@ class MLPNeuralNetwork:
             
                     self.expectedOutput = sample.output
                     self.backPropagateError()
-                    averageError = np.add(averageError, self.errors)
+                    averageError = np.add(averageError, self.errors, dtype=object)
             
                     loss = self.calculateLoss()
                     averageLoss += loss
             
-                    pred = np.argmax(self.layers[-1])
-                    prob = self.layers[-1][pred]
+                    #pred = np.argmax(self.layers[-1])
+                    #prob = self.layers[-1][pred]
             
                     #averageAcc += 1 if biggest_i == list(sample.output).index(1) else 0
             
@@ -178,12 +171,10 @@ class MLPNeuralNetwork:
                 self.errors = averageError
                 self.gradientDescent()
 
-                averageLoss += loss
-
                 #accuracyArray[batchCount] = acc
                 #batchCount += 1
 
-            lossArray[epoch] = averageLoss / len(samples)
+                lossArray[epoch] = averageLoss / len(samples)
 
             # Debug
             #lossArray.append(averageLoss / batch_size)
@@ -192,6 +183,8 @@ class MLPNeuralNetwork:
             #if self.adam:
             #    Mht = Mt / (1 / self.bias1 ** epoch)
             #    self.net.learning_rate /= math.sqrt(epoch)
+
+        self.doDropout = False
 
         print(lossArray)
 
@@ -203,7 +196,7 @@ class MLPNeuralNetwork:
         plt.legend()
         plt.show()
 
-    def test(self, dataset):
+    def test(self, dataset, nSamples=500):
         #if dataset.shape != (1, self.net.layerSizes[0]):
         #    raise ValueError(f"Dataset shape {dataset.shape} does not match the neural network's input shape (1, {self.net.layerSizes[0]}).")
 
@@ -212,19 +205,68 @@ class MLPNeuralNetwork:
         dataset.shuffle()
 
         averageLoss = 0
-        nSamples = 500
+        nSamples = min(nSamples, dataset.size)
+
+        # Just in case
+        self.doDropout = False
 
         for i in range(nSamples):
             sample = dataset.retrieveSample()
 
-            self.net.layers[0] = sample.data
-            self.net.forwardPropagate()
+            self.layers[0] = sample.data
+            self.forwardPropagate()
 
-            self.net.expectedOutput = sample.output
-            averageLoss += self.net.calculateLoss()
+            self.expectedOutput = sample.output
+            averageLoss += self.calculateLoss()
 
         averageLoss /= nSamples
         print(f"Average loss for {nSamples} samples is {averageLoss}")
+
+    def save(self, filename):
+        with open(filename, "wb") as f:
+            pickle.dump(self.layerSizes, f)
+            pickle.dump(self.lossfunction, f)
+            pickle.dump(self.activations, f)
+            pickle.dump(self.learning_rate, f)
+            pickle.dump(self.dropout, f)
+
+            pickle.dump(self.weights, f)
+            pickle.dump(self.biases, f)
+
+    @classmethod
+    def load(cls, filename):
+        self = cls.__new__(cls)
+
+        with open(filename, "rb") as f:
+            self.layerSizes = pickle.load(f)
+            self.lossfunction = pickle.load(f)
+            self.activations = pickle.load(f)
+            self.learning_rate = pickle.load(f)
+            self.dropout = pickle.load(f)
+
+            self.weights = pickle.load(f)
+            self.biases = pickle.load(f)
+
+        self.doDropout = False
+        self.adam = False
+
+        # Adam optimizer parameters
+        if self.adam:
+            self.momentum = 0.9
+            self.beta1 = 0.9
+            self.beta2 = 0.999
+            self.epsilon = 10**-8
+
+        self.expectedOutput = np.zeros(self.layerSizes[-1])
+
+        self.nLayers = len(self.layerSizes)
+        self.layerSizes = self.layerSizes
+        self.layers = [np.zeros(self.layerSizes[i], dtype=np.float64) for i in range(self.nLayers)]
+        self.zLayers = [np.zeros(self.layerSizes[i + 1], dtype=np.float64) for i in range(self.nLayers - 1)] # The same as layers but every neuron is before activation
+
+        self.errors = [np.zeros(self.layerSizes[i + 1]) for i in range(self.nLayers - 1)]
+
+        return self
 
     def __str__(self):
         string = "Input          "
