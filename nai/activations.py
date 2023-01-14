@@ -69,16 +69,11 @@ class Softmax(ActivationFunction):
     @staticmethod
     @nnjit
     def f(x):
-        return np.exp(x) / np.sum(np.exp(x), axis=0)
-        #e_x = np.exp(x)
-        #return e_x / np.sum(e_x, axis=1, keepdims=True)
+        ex = np.exp(x - np.max(x))
+        return ex / np.sum(ex)
+
     @staticmethod
     @nnjit
-    def df(x):
-        a = np.exp(x) / np.sum(np.exp(x), axis=0)
-        J = - a[..., None] * a[:, None, :]  # off-diagonal Jacobian
-        iy, ix = np.diag_indices_from(J[0])
-        J[:, iy, ix] = a * (1. - a)  # diagonal
-        return J.sum(axis=1)  # sum across-rows for each sample
-
+    def df(x): # TODO
+        return 1
 

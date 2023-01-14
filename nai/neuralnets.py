@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 from numba.core import types
 
 import pickle
-
+from tqdm import tqdm
 
 class MLPNeuralNetwork:
     def __init__(self, layerSizes, lossfunction, activations, learning_rate, dropout=0, adam=False):
@@ -111,6 +111,12 @@ class MLPNeuralNetwork:
     def calculateLoss(self):
         return self.lossfunction.f(self.layers[-1], self.expectedOutput)
 
+    def predict(self, data):
+        assert data.shape == self.layers[0].shape
+        self.layers[0] = data
+        self.forwardPropagate()
+        return self.layers[-1]
+
     def train(self, dataset, epochs=10, batch_size=32):
         if batch_size > dataset.size:
             raise ValueError(f"Batch size is greater than dataset size")
@@ -129,14 +135,14 @@ class MLPNeuralNetwork:
         #lossArray = np.empty(epochs)
         #accuracyArray = np.empty(epochs*nBatches)
 
-        #batchCount = 0
+        batchCount = 0
 
-        for epoch in range(epochs):
+        for epoch in tqdm(range(epochs)):
             print(f"Epoch {epoch+1}/{epochs}")
 
             dataset.shuffle()
 
-            for batch in range(nBatches):
+            for batch in tqdm(range(nBatches), leave=False):
                 averageError = np.array([np.zeros(self.layerSizes[i + 1]) for i in range(self.nLayers - 1)], dtype=object)
     
                 averageLoss = 0
@@ -172,9 +178,9 @@ class MLPNeuralNetwork:
                 self.gradientDescent()
 
                 #accuracyArray[batchCount] = acc
-                #batchCount += 1
+                lossArray[batchCount] = averageLoss / len(samples)
 
-                lossArray[epoch] = averageLoss / len(samples)
+                batchCount += 1
 
             # Debug
             #lossArray.append(averageLoss / batch_size)
@@ -190,7 +196,7 @@ class MLPNeuralNetwork:
 
         # Debug
         #plt.plot(range(epochs * nBatches), lossArray, label="Loss")
-        plt.plot(range(epochs), lossArray, label="Loss")
+        plt.plot(range(epochs*nBatches), lossArray, label="Loss")
         #plt.plot(range(epochs * nBatches), accuracyArray, label="Accuracy")
         plt.grid()
         plt.legend()
@@ -210,9 +216,9 @@ class MLPNeuralNetwork:
         # Just in case
         self.doDropout = False
 
-        for i in range(nSamples):
-            sample = dataset.retrieveSample()
+        samples = dataset.retrieveBatch(nSamples)
 
+        for sample in samples:
             self.layers[0] = sample.data
             self.forwardPropagate()
 

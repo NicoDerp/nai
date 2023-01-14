@@ -73,6 +73,7 @@ class MNIST(Dataset):
     def __init__(self, path, download=False, force=False):
 
         self.size = 60000
+        #self.size = 100
 
         self.path = path
         self.shape = (0, 0)
@@ -159,6 +160,8 @@ class MNIST(Dataset):
     def retrieveBatch(self, batch_size):
         samples = []
 
+        batch_size = min(batch_size, self.size - len(self.used))
+
         with open(os.path.join(self.RAW_DIR, "train-images-idx3-ubyte"), "rb") as dataFile, open(
                 os.path.join(self.RAW_DIR, "train-labels-idx1-ubyte"), "rb") as labelFile:
             for i in range(batch_size):
@@ -199,14 +202,14 @@ class MNIST(Dataset):
         # print("nth", n)
 
         # self.current == SetTypes.Train
-        with open(os.path.join(self.RAW_DIR, "train-images-idx3-ubyte"), "rb") as f:
-            f.seek(n * 28 * 28 + 16)
-            data = [int.from_bytes(f.read(1), "big") for i in range(28 * 28)]
-            data = list(map(lambda a: a / 255, data))
+        with open(os.path.join(self.RAW_DIR, "train-images-idx3-ubyte"), "rb") as dataFile:
+            dataFile.seek(n * 28 * 28 + 16)
+            data = np.array([int.from_bytes(dataFile.read(1), "big") for i in range(28 * 28)], dtype=np.float64)
+            data /= 255
 
-        with open(os.path.join(self.RAW_DIR, "train-labels-idx1-ubyte"), "rb") as f:
-            f.seek(n * 1 + 8)
-            label = int.from_bytes(f.read(1), "big")
+        with open(os.path.join(self.RAW_DIR, "train-labels-idx1-ubyte"), "rb") as labelFile:
+            labelFile.seek(n * 1 + 8)
+            label = int.from_bytes(labelFile.read(1), "big")
 
             # This is going from one-hot encoded to categorial
             output = np.zeros(10)

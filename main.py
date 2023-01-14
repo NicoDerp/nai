@@ -7,19 +7,24 @@ dataset = datasets.MNIST("datasets", download=True)
 #dataset = datasets.XOR()
 
 model = MLPNeuralNetwork([784, 128, 10],
-                         lossfunction=CrossEntropy,
-                         activations=[ReLU, Softmax],
+                         lossfunction=MSE,
+                         activations=[ReLU, ReLU],
                          learning_rate=0.01,
                          dropout=0.2)
 
 #model = aiwrappers.MLP([2, 3, 1], MSE, ReLU)
 
-model.train(dataset, epochs=4, batch_size=64)
+model.train(dataset, epochs=1, batch_size=64)
+
 #model.train(dataset, epochs=4000, batch_size=1)
 
 model.save("myModel.model")
 
-#model.test(dataset)
+model.test(dataset)
+
+exit()
+
+
 
 print("\n\nTest:")
 
