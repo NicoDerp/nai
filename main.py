@@ -7,8 +7,8 @@ dataset = datasets.MNIST("datasets", download=True)
 #dataset = datasets.XOR()
 
 model = MLPNeuralNetwork([784, 128, 10],
-                         lossfunction=MSE,
-                         activations=[ReLU, ReLU],
+                         lossfunction=CrossEntropy,
+                         activations=[ReLU, Softmax],
                          learning_rate=0.01,
                          dropout=0.2)
 

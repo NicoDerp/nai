@@ -42,3 +42,17 @@ class CrossEntropy:
     def df(aL, yL):
         return -yL / aL
 
+
+class BinaryCrossEntropy:
+    name = "Binary Cross-Entropy"
+
+    @staticmethod
+    @nnjit
+    def f(aL, yL):
+        return -yL * np.log(aL) - (1 - yL) * np.log(1 - aL)
+
+    @staticmethod
+    @nnjit
+    def df(aL, yL):
+        return (-yL / aL) + (1 - yL) / (1 - aL)
+

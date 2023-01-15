@@ -62,6 +62,7 @@ class MLPNeuralNetwork:
 
     def forwardPropagate(self):
         # 0 - (len(self.nLayers) - 1)
+        # 0 - 1
         for i in range(self.nLayers - 1):
             #wL = self.weights[i].reshape((self.layerSizes[i + 1], self.layerSizes[i]))
             wL = self.weights[i]
@@ -75,8 +76,10 @@ class MLPNeuralNetwork:
     def backPropagateError(self):
 
         dk = self.lossfunction.df(self.layers[-1], self.expectedOutput)
+        #print(self.layers[-1])
         # TODO zLayers or layers??? Try both
-        errs = np.multiply(dk, self.activations[-1].df(self.zLayers[-1]))
+        #errs = np.multiply(dk, self.activations[-1].df(self.zLayers[-1]))
+        errs = dk
         #errs = np.multiply(dk, self.activations[-1].df(self.layers[-1]))
         self.errors[-1] = errs
 
@@ -93,11 +96,10 @@ class MLPNeuralNetwork:
             self.errors[i - 1] = eL
 
     def gradientDescent(self):
-        # 1 - 0
-        for i in range(self.nLayers - 2, -1, -1):
+        # 0 - 1
+        for i in range(self.nLayers - 1):
             eL = self.errors[i] # Error for this layer
-            #aL1 = self.layers[i+1]
-            #aL1 = np.copy(self.layers[i]) # L-1
+            #aL1 = self.layers[i] # L-1
             aL1 = self.layers[i].reshape((-1, 1)) # 1D tranpose (1, 5) -> (5, 1)
 
             dw = self.learning_rate * eL * aL1

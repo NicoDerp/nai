@@ -75,5 +75,6 @@ class Softmax(ActivationFunction):
     @staticmethod
     @nnjit
     def df(x): # TODO
-        return 1
+        ex = np.exp(x - np.max(x))
+        return ex / np.sum(ex)
 
