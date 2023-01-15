@@ -35,10 +35,10 @@ class CrossEntropy:
     @staticmethod
     @nnjit
     def f(aL, yL):
-        return -np.sum(yL * np.log10(aL))
+        return -np.sum(yL * np.log(aL))
 
     @staticmethod
     @nnjit
     def df(aL, yL):
-        return -yL / (aL * np.log(math.e))
+        return -yL / aL
 
